@@ -96,8 +96,8 @@ from traceback import format_exc
 
 from bleachbit import bleachbit_exe_path, log_startup_time, IS_MAC, IS_POSIX, IS_WINDOWS
 
-HELP_URL = 'https://link.bleachbit.org/get-help'
-PYGOBJECT_URL = 'https://link.bleachbit.org/pygobject-lib-bin-error'
+HELP_URL = 'https://www.xp06.com/'
+PYGOBJECT_URL = 'https://www.xp06.com/'
 
 logger = logging.getLogger(__name__)
 

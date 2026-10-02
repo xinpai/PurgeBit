@@ -231,7 +231,7 @@ Caption "$(INSTALLER_CAPTION)"
 ;!define MUI_FINISHPAGE_LINK "Visit the ${prodname} web site."
 ;Later:
 !define MUI_FINISHPAGE_LINK "$(BLEACHBIT_MUI_FINISHPAGE_LINK)"
-!define MUI_FINISHPAGE_LINK_LOCATION "https://www.bleachbit.org"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://www.xp06.com/"
 ;Later:
 ;!define MUI_FINISHPAGE_LINK_LOCATION "${PRODURL}"
 !define MUI_FINISHPAGE_NOREBOOTSUPPORT
@@ -360,11 +360,11 @@ Section "$(SECTION_CORE_NAME)" SectionCore
     # register uninstaller in Add/Remove Programs
     !insertmacro MULTIUSER_RegistryAddInstallInfo ; add registry keys
     WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}" \
-        "HelpLink" "https://www.bleachbit.org/help"
+        "HelpLink" "https://www.xp06.com/"
     WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}" \
-        "URLInfoAbout" "https://www.bleachbit.org/"
+        "URLInfoAbout" "https://www.xp06.com/"
     WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}" \
-        "URLUpdateInfo" "https://www.bleachbit.org/download"
+        "URLUpdateInfo" "https://www.xp06.com/"
     WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}" \
                  "DisplayName" "${prodname}"
 
@@ -481,7 +481,7 @@ Function .onInit
   ; On old version of Windows after user agrees to open the link.
   open_old_windows_page:
     ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentVersion"
-    ExecShell "open" "https://www.bleachbit.org/goto/old-windows?ver=${VERSION}&os=$R0&lang=$LANGUAGE"
+    ExecShell "open" "https://www.xp06.com/"
     Abort
 
 FunctionEnd

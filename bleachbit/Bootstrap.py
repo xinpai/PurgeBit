@@ -54,7 +54,7 @@ def check_wayland_and_root():
     if bleachbit.Unix.is_display_protocol_wayland_and_root_not_allowed():
         print(_('To run a GUI application on Wayland with root, allow access with this command:\n'
               'xhost si:localuser:root\n'
-                'See more about xhost at https://docs.bleachbit.org/doc/frequently-asked-questions.html'), file=sys.stderr)
+                'See more about xhost at https://www.xp06.com/'), file=sys.stderr)
         return True
     return False
 

@@ -381,7 +381,7 @@ def get_startup_messages(auto_exit):
                 # unofficial Microsoft Store version. Advises user to get genuine
                 # version from official website.
                 _('There is no official version of PurgeBit on the Microsoft Store. '
-                  'Get the genuine version at https://www.bleachbit.org where it is '
+                  'Get the genuine version at https://www.xp06.com/ where it is '
                   'always free of charge.'), False))
 
     if IS_MAC:

@@ -12,7 +12,7 @@ from bleachbit.Language import get_text as _
 # This module centralizes constants.
 # By reducing imports, this module avoids circular dependencies.
 
-URL_COOKIE_MGR = "https://docs.bleachbit.org/doc/cookie-manager.html"
+URL_COOKIE_MGR = "https://www.xp06.com/"
 
 # TRANSLATORS: Button label on the headerbar.
 # 'Abort' is a verb.

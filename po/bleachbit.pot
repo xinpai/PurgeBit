@@ -1277,8 +1277,7 @@ msgid ""
 "To run a GUI application on Wayland with root, allow access with this "
 "command:\n"
 "xhost si:localuser:root\n"
-"See more about xhost at https://docs.bleachbit.org/doc/frequently-asked-"
-"questions.html"
+"See more about xhost at https://www.xp06.com/"
 msgstr ""
 
 #: ../bleachbit/CleanerML.py
@@ -2361,7 +2360,7 @@ msgstr ""
 #: ../bleachbit/GuiStartup.py
 msgid ""
 "There is no official version of PurgeBit on the Microsoft Store. Get the "
-"genuine version at https://www.bleachbit.org where it is always free of "
+"genuine version at https://www.xp06.com/ where it is always free of "
 "charge."
 msgstr ""
 

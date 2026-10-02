@@ -340,4 +340,4 @@ locale_dir = _resolve_locale_dir(
 #
 # URLs
 #
-help_contents_url = "https://www.bleachbit.org/help"
+help_contents_url = "https://www.xp06.com/"

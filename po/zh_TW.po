@@ -1294,13 +1294,11 @@ msgid ""
 "To run a GUI application on Wayland with root, allow access with this "
 "command:\n"
 "xhost si:localuser:root\n"
-"See more about xhost at https://docs.bleachbit.org/doc/frequently-asked-"
-"questions.html"
+"See more about xhost at https://www.xp06.com/"
 msgstr ""
 "要以 root 在 Wayland 執行圖形應用，使用這個指令允許存取：\n"
 "xhost si:localuser:root\n"
-"更多 xhost 相關信息可至 https://docs.bleachbit.org/doc/frequently-asked-"
-"questions.html"
+"更多 xhost 相關信息可至 https://www.xp06.com/"
 
 #: ../bleachbit/CleanerML.py
 #, python-brace-format
@@ -2398,11 +2396,11 @@ msgstr ""
 #: ../bleachbit/GuiStartup.py
 msgid ""
 "There is no official version of PurgeBit on the Microsoft Store. Get the "
-"genuine version at https://www.bleachbit.org where it is always free of "
+"genuine version at https://www.xp06.com/ where it is always free of "
 "charge."
 msgstr ""
 "Microsoft 商店上沒有官方版本的 PurgeBit。 要獲取貨真價實的版本，請訪問 "
-"https://www.bleachbit.org 。 本程式始終免費。"
+"https://www.xp06.com/ 。 本程式始終免費。"
 
 #. TRANSLATORS: Startup warning on macOS when the application
 #. lacks Full Disk Access. "Full Disk Access", "System
