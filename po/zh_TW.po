@@ -1,0 +1,3176 @@
+# Chinese (Traditional) translation for bleachbit
+# Copyright (c) 2010 Rosetta Contributors and Canonical Ltd 2010
+# This file is distributed under the same license as the bleachbit package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: bleachbit\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-23 20:05-0600\n"
+"PO-Revision-Date: 2026-09-25 04:26+0000\n"
+"Last-Translator: Pin-Hsien Lee <plesry@users.noreply.hosted.weblate.org>\n"
+"Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/"
+"projects/bleachbit/main/zh_Hant/>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 2026.10.dev0\n"
+"X-Launchpad-Export-Date: 2021-10-29 20:32+0000\n"
+
+#: ../cleaners/realplayer.xml ../cleaners/windows_media_player.xml
+#: ../cleaners/audacious.xml ../cleaners/exaile.xml ../cleaners/winamp.xml
+#: ../cleaners/vlc.xml
+msgid "Media player"
+msgstr "影音播放器"
+
+#. TRANSLATORS: Sidebar label for the page managing browser cookies in
+#. the Preferences dialog.
+#: ../cleaners/realplayer.xml ../cleaners/librewolf.xml ../cleaners/vivaldi.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/epiphany.xml ../cleaners/zen.xml
+#: ../cleaners/konqueror.xml ../cleaners/silverlight.xml
+#: ../cleaners/chromium.xml ../cleaners/slack.xml ../cleaners/thunderbird.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/liferea.xml
+#: ../cleaners/brave.xml ../cleaners/seamonkey.xml ../cleaners/flash.xml
+#: ../cleaners/google_chrome.xml ../cleaners/internet_explorer.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml ../cleaners/discord.xml
+#: ../bleachbit/GuiPreferences.py
+msgid "Cookies"
+msgstr "Cookie"
+
+#: ../cleaners/realplayer.xml ../cleaners/librewolf.xml ../cleaners/vivaldi.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/epiphany.xml ../cleaners/zen.xml
+#: ../cleaners/konqueror.xml ../cleaners/silverlight.xml
+#: ../cleaners/chromium.xml ../cleaners/slack.xml ../cleaners/thunderbird.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/liferea.xml
+#: ../cleaners/brave.xml ../cleaners/seamonkey.xml ../cleaners/flash.xml
+#: ../cleaners/google_chrome.xml ../cleaners/internet_explorer.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml ../cleaners/discord.xml
+msgid ""
+"Delete cookies, which store login information, website preferences, and "
+"tracking identifiers"
+msgstr "刪除 Cookie 檔案，它們保存登入資訊、網站偏好和追蹤標識符"
+
+#: ../cleaners/realplayer.xml ../cleaners/zsh.xml ../cleaners/bash.xml
+#: ../cleaners/elinks.xml ../cleaners/vivaldi.xml ../cleaners/easytag.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml ../cleaners/fish.xml
+#: ../cleaners/chromium.xml ../cleaners/sqlite3.xml
+#: ../cleaners/windows_defender.xml ../cleaners/slack.xml ../cleaners/brave.xml
+#: ../cleaners/nautilus.xml ../cleaners/links2.xml ../cleaners/d4x.xml
+#: ../cleaners/libreoffice.xml ../cleaners/seamonkey.xml
+#: ../cleaners/google_chrome.xml ../cleaners/mc.xml ../cleaners/tortoisesvn.xml
+#: ../cleaners/internet_explorer.xml ../cleaners/winrar.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/python.xml ../cleaners/vim.xml
+#: ../cleaners/opera.xml ../cleaners/discord.xml ../cleaners/octave.xml
+msgid "History"
+msgstr "歷史紀錄"
+
+#: ../cleaners/realplayer.xml ../cleaners/easytag.xml ../cleaners/filezilla.xml
+#: ../cleaners/gnome.xml ../cleaners/windows_defender.xml
+#: ../cleaners/nautilus.xml ../cleaners/links2.xml ../cleaners/d4x.xml
+#: ../cleaners/libreoffice.xml ../cleaners/mc.xml ../cleaners/tortoisesvn.xml
+#: ../cleaners/internet_explorer.xml ../cleaners/winrar.xml
+#: ../cleaners/amule.xml
+msgid "Delete the usage history"
+msgstr "刪除使用紀錄"
+
+#. TRANSLATORS: Name of a cleaning option for Windows log files.
+#: ../cleaners/realplayer.xml ../cleaners/miro.xml ../cleaners/audacious.xml
+#: ../cleaners/yahoo_messenger.xml ../cleaners/easytag.xml
+#: ../cleaners/warzone2100.xml ../cleaners/gpodder.xml ../cleaners/exaile.xml
+#: ../cleaners/windows_defender.xml ../cleaners/smartftp.xml
+#: ../cleaners/android_studio.xml ../cleaners/vscode.xml
+#: ../cleaners/hippo_opensim_viewer.xml ../cleaners/claude.xml
+#: ../cleaners/zoom.xml ../cleaners/profanity.xml ../cleaners/teamviewer.xml
+#: ../cleaners/internet_explorer.xml ../cleaners/screenlets.xml
+#: ../cleaners/gftp.xml ../cleaners/amule.xml ../cleaners/vuze.xml
+#: ../bleachbit/Cleaner.py
+msgid "Logs"
+msgstr "日誌"
+
+#. TRANSLATORS: Description of the Logs cleaning option.
+#: ../cleaners/realplayer.xml ../cleaners/miro.xml ../cleaners/audacious.xml
+#: ../cleaners/yahoo_messenger.xml ../cleaners/warzone2100.xml
+#: ../cleaners/gpodder.xml ../cleaners/exaile.xml
+#: ../cleaners/windows_defender.xml ../cleaners/smartftp.xml
+#: ../cleaners/android_studio.xml ../cleaners/vscode.xml
+#: ../cleaners/hippo_opensim_viewer.xml ../cleaners/claude.xml
+#: ../cleaners/zoom.xml ../cleaners/profanity.xml ../cleaners/teamviewer.xml
+#: ../cleaners/internet_explorer.xml ../cleaners/screenlets.xml
+#: ../cleaners/gftp.xml ../cleaners/amule.xml ../cleaners/vuze.xml
+#: ../bleachbit/Cleaner.py
+msgid "Delete the logs"
+msgstr "刪除日誌"
+
+#: ../cleaners/xine.xml ../cleaners/miro.xml ../cleaners/silverlight.xml
+#: ../cleaners/flash.xml
+msgid "Multimedia viewer"
+msgstr "多媒體瀏覽器"
+
+#. TRANSLATORS: Name of a cleaning option. Cache is a noun.
+#: ../cleaners/xine.xml ../cleaners/miro.xml ../cleaners/amsn.xml
+#: ../cleaners/librewolf.xml ../cleaners/openoffice.xml
+#: ../cleaners/rhythmbox.xml ../cleaners/beagle.xml
+#: ../cleaners/windows_media_player.xml ../cleaners/audacious.xml
+#: ../cleaners/vivaldi.xml ../cleaners/yahoo_messenger.xml
+#: ../cleaners/pidgin.xml ../cleaners/secondlife_viewer.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/emesene.xml ../cleaners/nexuiz.xml
+#: ../cleaners/java.xml ../cleaners/epiphany.xml ../cleaners/gpodder.xml
+#: ../cleaners/geary.xml ../cleaners/zen.xml ../cleaners/thumbnails.xml
+#: ../cleaners/exaile.xml ../cleaners/chromium.xml ../cleaners/slack.xml
+#: ../cleaners/smartftp.xml ../cleaners/thunderbird.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/liferea.xml
+#: ../cleaners/vscode.xml ../cleaners/hippo_opensim_viewer.xml
+#: ../cleaners/adobe_reader.xml ../cleaners/brave.xml ../cleaners/claude.xml
+#: ../cleaners/zoom.xml ../cleaners/evolution.xml ../cleaners/seamonkey.xml
+#: ../cleaners/flash.xml ../cleaners/google_chrome.xml
+#: ../cleaners/tremulous.xml ../cleaners/internet_explorer.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/gftp.xml ../cleaners/kde.xml
+#: ../cleaners/vuze.xml ../cleaners/opera.xml ../cleaners/discord.xml
+#: ../bleachbit/Cleaner.py
+msgid "Cache"
+msgstr "快取"
+
+#. TRANSLATORS: The description of what certain cleaning options do.
+#: ../cleaners/xine.xml ../cleaners/dnf.xml ../cleaners/miro.xml
+#: ../cleaners/amsn.xml ../cleaners/librewolf.xml ../cleaners/openoffice.xml
+#: ../cleaners/rhythmbox.xml ../cleaners/beagle.xml ../cleaners/yum.xml
+#: ../cleaners/windows_media_player.xml ../cleaners/audacious.xml
+#: ../cleaners/yahoo_messenger.xml ../cleaners/pidgin.xml
+#: ../cleaners/secondlife_viewer.xml ../cleaners/pacman.xml
+#: ../cleaners/waterfox.xml ../cleaners/nexuiz.xml ../cleaners/java.xml
+#: ../cleaners/gpodder.xml ../cleaners/geary.xml ../cleaners/zen.xml
+#: ../cleaners/thumbnails.xml ../cleaners/exaile.xml
+#: ../cleaners/windows_explorer.xml ../cleaners/smartftp.xml
+#: ../cleaners/apt.xml ../cleaners/palemoon.xml ../cleaners/android_studio.xml
+#: ../cleaners/firefox.xml ../cleaners/liferea.xml ../cleaners/vscode.xml
+#: ../cleaners/hippo_opensim_viewer.xml ../cleaners/adobe_reader.xml
+#: ../cleaners/claude.xml ../cleaners/zoom.xml ../cleaners/evolution.xml
+#: ../cleaners/flash.xml ../cleaners/internet_explorer.xml ../cleaners/gftp.xml
+#: ../cleaners/kde.xml ../cleaners/vuze.xml ../bleachbit/Cleaner.py
+msgid "Delete the cache"
+msgstr "刪除快取"
+
+#: ../cleaners/paint.xml ../cleaners/openoffice.xml
+#: ../cleaners/microsoft_office.xml ../cleaners/windows_media_player.xml
+#: ../cleaners/wordpad.xml ../cleaners/audacious.xml ../cleaners/filezilla.xml
+#: ../cleaners/windows_explorer.xml ../cleaners/smartftp.xml
+#: ../cleaners/winamp.xml ../cleaners/adobe_reader.xml ../cleaners/winzip.xml
+#: ../cleaners/teamviewer.xml ../cleaners/vlc.xml
+msgid "Most recently used"
+msgstr "最近使用檔案"
+
+#: ../cleaners/paint.xml ../cleaners/microsoft_office.xml
+#: ../cleaners/windows_media_player.xml ../cleaners/wordpad.xml
+#: ../cleaners/windows_explorer.xml ../cleaners/smartftp.xml
+#: ../cleaners/winamp.xml ../cleaners/winzip.xml ../cleaners/teamviewer.xml
+#: ../cleaners/vlc.xml
+msgid "Delete the most recently used list"
+msgstr "刪除最近使用檔案清單"
+
+#: ../cleaners/dnf.xml ../cleaners/yum.xml ../cleaners/pacman.xml
+#: ../cleaners/apt.xml ../cleaners/snap.xml
+msgid "Package manager"
+msgstr "軟體包管理員"
+
+#: ../cleaners/dnf.xml
+msgid "Remove packages that were formerly dependencies"
+msgstr "移除先前以相依關係安裝的軟體包"
+
+#: ../cleaners/dnf.xml
+msgid ""
+"Carefully review the list of packages that will be removed by running \"dnf "
+"list autoremove\"."
+msgstr "請仔細檢查所列的軟體包；之後將執行「dnf list autoremove」移除它們。"
+
+#: ../cleaners/amsn.xml ../cleaners/yahoo_messenger.xml ../cleaners/pidgin.xml
+#: ../cleaners/emesene.xml ../cleaners/slack.xml ../cleaners/hexchat.xml
+#: ../cleaners/zoom.xml ../cleaners/skype.xml ../cleaners/profanity.xml
+#: ../cleaners/discord.xml
+msgid "Chat client"
+msgstr "聊天客戶端"
+
+#: ../cleaners/amsn.xml ../cleaners/yahoo_messenger.xml ../cleaners/pidgin.xml
+#: ../cleaners/emesene.xml ../cleaners/hexchat.xml ../cleaners/skype.xml
+#: ../cleaners/seamonkey.xml
+msgid "Chat logs"
+msgstr "聊天紀錄"
+
+#: ../cleaners/amsn.xml ../cleaners/yahoo_messenger.xml ../cleaners/pidgin.xml
+#: ../cleaners/emesene.xml ../cleaners/hexchat.xml ../cleaners/skype.xml
+#: ../cleaners/seamonkey.xml
+msgid "Delete the chat logs"
+msgstr "刪除聊天紀錄"
+
+#: ../cleaners/librewolf.xml ../cleaners/elinks.xml ../cleaners/vivaldi.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/epiphany.xml ../cleaners/zen.xml
+#: ../cleaners/konqueror.xml ../cleaners/chromium.xml ../cleaners/palemoon.xml
+#: ../cleaners/firefox.xml ../cleaners/brave.xml ../cleaners/links2.xml
+#: ../cleaners/seamonkey.xml ../cleaners/google_chrome.xml
+#: ../cleaners/internet_explorer.xml ../cleaners/microsoft_edge.xml
+#: ../cleaners/opera.xml
+msgid "Web browser"
+msgstr "網頁瀏覽器"
+
+#: ../cleaners/librewolf.xml ../cleaners/waterfox.xml ../cleaners/zen.xml
+#: ../cleaners/windows_defender.xml ../cleaners/palemoon.xml
+#: ../cleaners/firefox.xml ../cleaners/vscode.xml ../cleaners/claude.xml
+#: ../cleaners/deepscan.xml ../cleaners/amule.xml ../cleaners/vuze.xml
+msgid "Backup files"
+msgstr "備份檔"
+
+#: ../cleaners/librewolf.xml ../cleaners/waterfox.xml ../cleaners/zen.xml
+#: ../cleaners/windows_defender.xml ../cleaners/palemoon.xml
+#: ../cleaners/firefox.xml ../cleaners/vscode.xml ../cleaners/claude.xml
+#: ../cleaners/deepscan.xml ../cleaners/amule.xml ../cleaners/vuze.xml
+msgid "Delete the backup files"
+msgstr "刪除備份檔案"
+
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/safari.xml
+#: ../cleaners/waterfox.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/brave.xml
+#: ../cleaners/google_chrome.xml ../cleaners/microsoft_edge.xml
+#: ../cleaners/opera.xml
+msgid "Crash reports"
+msgstr "崩潰報告"
+
+#: ../cleaners/librewolf.xml ../cleaners/zsh.xml ../cleaners/beagle.xml
+#: ../cleaners/vivaldi.xml ../cleaners/safari.xml ../cleaners/waterfox.xml
+#: ../cleaners/geary.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/windows_defender.xml ../cleaners/thunderbird.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/brave.xml
+#: ../cleaners/claude.xml ../cleaners/deepscan.xml
+#: ../cleaners/google_chrome.xml ../cleaners/transmission.xml
+#: ../cleaners/profanity.xml ../cleaners/microsoft_edge.xml
+#: ../cleaners/vuze.xml ../cleaners/opera.xml
+msgid "Delete the files"
+msgstr "刪除檔案"
+
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/safari.xml
+#: ../cleaners/waterfox.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/brave.xml
+#: ../cleaners/google_chrome.xml ../cleaners/internet_explorer.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Form history"
+msgstr "表單紀錄"
+
+#: ../cleaners/librewolf.xml ../cleaners/waterfox.xml ../cleaners/zen.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/internet_explorer.xml
+msgid "Saved form entries and search bar history"
+msgstr "保存的表單項目和搜尋欄歷史紀錄"
+
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/waterfox.xml
+#: ../cleaners/epiphany.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/thunderbird.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Passwords"
+msgstr "密碼"
+
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/waterfox.xml
+#: ../cleaners/epiphany.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/thunderbird.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid ""
+"A database of usernames and passwords as well as a list of sites that should "
+"not store passwords"
+msgstr "一個保存了使用者帳號、密碼和「不再儲存密碼」網站的資料庫"
+
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/waterfox.xml
+#: ../cleaners/epiphany.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/thunderbird.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "This option will delete your saved passwords."
+msgstr "這個選項將刪除您過去保存的密碼。"
+
+#: ../cleaners/librewolf.xml ../cleaners/zsh.xml ../cleaners/vivaldi.xml
+#: ../cleaners/safari.xml ../cleaners/waterfox.xml ../cleaners/zen.xml
+#: ../cleaners/chromium.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/brave.xml ../cleaners/claude.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Session"
+msgstr "作業階段"
+
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/safari.xml
+#: ../cleaners/waterfox.xml ../cleaners/zen.xml ../cleaners/chromium.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml ../cleaners/brave.xml
+#: ../cleaners/google_chrome.xml ../cleaners/microsoft_edge.xml
+#: ../cleaners/opera.xml
+msgid "Previously open tabs and windows"
+msgstr "先前打開的分頁和視窗"
+
+#. Label for cleaning option to delete site data such as LocalStorage and IndexedDB
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/safari.xml
+#: ../cleaners/waterfox.xml ../cleaners/epiphany.xml ../cleaners/zen.xml
+#: ../cleaners/chromium.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Site data"
+msgstr "網站資料"
+
+#. Description for cleaning option. LocalStorage and IndexedDB are proper nouns: do not translate
+#: ../cleaners/librewolf.xml ../cleaners/vivaldi.xml ../cleaners/safari.xml
+#: ../cleaners/waterfox.xml ../cleaners/epiphany.xml ../cleaners/zen.xml
+#: ../cleaners/chromium.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Delete LocalStorage, IndexedDB, and other data stored by websites"
+msgstr "刪除 LocalStorage, IndexedDB 和其他由網站儲存的資料"
+
+#: ../cleaners/librewolf.xml ../cleaners/safari.xml ../cleaners/waterfox.xml
+#: ../cleaners/zen.xml ../cleaners/chromium.xml ../cleaners/palemoon.xml
+#: ../cleaners/firefox.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Site preferences"
+msgstr "網站偏好"
+
+#: ../cleaners/librewolf.xml ../cleaners/safari.xml ../cleaners/waterfox.xml
+#: ../cleaners/zen.xml ../cleaners/chromium.xml ../cleaners/palemoon.xml
+#: ../cleaners/firefox.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "Settings for individual sites"
+msgstr "個別網站設定"
+
+#: ../cleaners/librewolf.xml ../cleaners/waterfox.xml ../cleaners/zen.xml
+#: ../cleaners/konqueror.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+msgid "URL history"
+msgstr "URL 紀錄"
+
+#: ../cleaners/librewolf.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/zen.xml ../cleaners/konqueror.xml
+#: ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/internet_explorer.xml
+msgid "List of visited web pages"
+msgstr "造訪過的網頁清單"
+
+#. TRANSLATORS: Vacuum is a verb.  The term is jargon
+#. from the SQLite database.  Microsoft Access uses
+#. the term 'Compact Database' (which you may translate
+#. instead).  Another synonym is 'defragment.'
+#: ../cleaners/librewolf.xml ../cleaners/yum.xml ../cleaners/vivaldi.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/gpodder.xml ../cleaners/geary.xml
+#: ../cleaners/zen.xml ../cleaners/chromium.xml ../cleaners/slack.xml
+#: ../cleaners/thunderbird.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/liferea.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml ../cleaners/discord.xml
+#: ../bleachbit/Action.py
+msgid "Vacuum"
+msgstr "重整資料庫"
+
+#: ../cleaners/librewolf.xml ../cleaners/yum.xml ../cleaners/vivaldi.xml
+#: ../cleaners/safari.xml ../cleaners/safari_windows.xml
+#: ../cleaners/waterfox.xml ../cleaners/gpodder.xml ../cleaners/geary.xml
+#: ../cleaners/zen.xml ../cleaners/chromium.xml ../cleaners/slack.xml
+#: ../cleaners/thunderbird.xml ../cleaners/palemoon.xml ../cleaners/firefox.xml
+#: ../cleaners/liferea.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml ../cleaners/discord.xml
+msgid ""
+"Clean database fragmentation to reduce space and improve speed without "
+"removing any data"
+msgstr "清理資料庫碎片，騰出空間並加快速度；不需刪除任何資料"
+
+#: ../cleaners/zsh.xml ../cleaners/bash.xml ../cleaners/fish.xml
+msgid "Shell"
+msgstr "Shell"
+
+#: ../cleaners/zsh.xml ../cleaners/bash.xml ../cleaners/fish.xml
+#: ../cleaners/sqlite3.xml ../cleaners/python.xml ../cleaners/octave.xml
+msgid "Delete the command history"
+msgstr "刪除指令紀錄"
+
+#: ../cleaners/openoffice.xml ../cleaners/microsoft_office.xml
+#: ../cleaners/libreoffice.xml
+msgid "Office suite"
+msgstr "辦公套裝軟體"
+
+#. TRANSLATORS: Description of the Recent documents list cleaning option.
+#: ../cleaners/openoffice.xml ../cleaners/audacious.xml
+#: ../cleaners/windows_explorer.xml ../cleaners/gwenview.xml
+#: ../cleaners/adobe_reader.xml ../cleaners/gedit.xml ../cleaners/kde.xml
+#: ../bleachbit/Cleaner.py
+msgid "Delete the list of recently used documents"
+msgstr "刪除最近使用檔案清單"
+
+#: ../cleaners/rhythmbox.xml
+msgid "Database"
+msgstr "資料庫"
+
+#: ../cleaners/rhythmbox.xml
+msgid ""
+"Delete the database, which contains information such as play count and last "
+"played"
+msgstr "刪除資料庫，裡面保存了播放次數、最近播放內容等資訊"
+
+#: ../cleaners/microsoft_office.xml ../cleaners/beagle.xml
+#: ../cleaners/secondlife_viewer.xml ../cleaners/x11.xml ../cleaners/gl-117.xml
+msgid "Debug logs"
+msgstr "除錯日誌"
+
+#: ../cleaners/microsoft_office.xml ../cleaners/beagle.xml
+#: ../cleaners/secondlife_viewer.xml ../cleaners/easytag.xml
+#: ../cleaners/x11.xml ../cleaners/gl-117.xml
+msgid "Delete the debug logs"
+msgstr "刪除 debug（除錯）日誌"
+
+#. TRANSLATORS: Name of a cleaning option for temporary files.
+#: ../cleaners/bash.xml ../cleaners/google_earth.xml ../cleaners/wine.xml
+#: ../cleaners/silverlight.xml ../cleaners/windows_defender.xml
+#: ../cleaners/winetricks.xml ../cleaners/gimp.xml ../cleaners/adobe_reader.xml
+#: ../cleaners/claude.xml ../cleaners/deepscan.xml ../cleaners/winrar.xml
+#: ../cleaners/amule.xml ../cleaners/kde.xml ../cleaners/vuze.xml
+#: ../bleachbit/Cleaner.py
+msgid "Temporary files"
+msgstr "暫存檔"
+
+#. TRANSLATORS: Description of the Temporary files cleaning option.
+#: ../cleaners/bash.xml ../cleaners/google_earth.xml ../cleaners/wine.xml
+#: ../cleaners/silverlight.xml ../cleaners/windows_defender.xml
+#: ../cleaners/winetricks.xml ../cleaners/gimp.xml ../cleaners/adobe_reader.xml
+#: ../cleaners/claude.xml ../cleaners/deepscan.xml ../cleaners/winrar.xml
+#: ../cleaners/amule.xml ../cleaners/kde.xml ../cleaners/vuze.xml
+#: ../bleachbit/Cleaner.py
+msgid "Delete the temporary files"
+msgstr "刪除暫存檔案"
+
+#: ../cleaners/beagle.xml ../cleaners/recoll.xml
+msgid "Search tool"
+msgstr "搜索工具"
+
+#: ../cleaners/beagle.xml ../cleaners/thunderbird.xml ../cleaners/recoll.xml
+msgid "Index"
+msgstr "索引"
+
+#: ../cleaners/elinks.xml
+msgid "Delete the cookies, visited URLs, and search history"
+msgstr "刪除 Cookie、造訪過的 URL 和搜尋紀錄"
+
+#: ../cleaners/wordpad.xml
+msgid "Word processor"
+msgstr "文字處理器"
+
+#: ../cleaners/vivaldi.xml ../cleaners/safari.xml
+#: ../cleaners/safari_windows.xml ../cleaners/epiphany.xml
+#: ../cleaners/chromium.xml ../cleaners/slack.xml ../cleaners/thunderbird.xml
+#: ../cleaners/brave.xml ../cleaners/seamonkey.xml
+#: ../cleaners/google_chrome.xml ../cleaners/microsoft_edge.xml
+#: ../cleaners/opera.xml
+msgid "Delete the web cache, which reduces time to display revisited pages"
+msgstr "刪除網頁快取；快取可以減少下次造訪網頁的時間"
+
+#: ../cleaners/vivaldi.xml ../cleaners/safari.xml ../cleaners/chromium.xml
+#: ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml
+msgid "A history of forms entered in websites"
+msgstr "網站表單的輸入紀錄"
+
+#: ../cleaners/vivaldi.xml ../cleaners/safari.xml ../cleaners/chromium.xml
+#: ../cleaners/slack.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml ../cleaners/opera.xml ../cleaners/discord.xml
+msgid ""
+"Delete the history which includes visited sites, downloads, and thumbnails"
+msgstr "刪除已造訪網站、下載與縮圖的歷史紀錄"
+
+#: ../cleaners/vivaldi.xml ../cleaners/chromium.xml ../cleaners/brave.xml
+#: ../cleaners/google_chrome.xml ../cleaners/microsoft_edge.xml
+msgid "Sync"
+msgstr "同步資料"
+
+#: ../cleaners/vivaldi.xml ../cleaners/chromium.xml ../cleaners/brave.xml
+#: ../cleaners/google_chrome.xml ../cleaners/microsoft_edge.xml
+msgid "Delete the sync data (including web apps) and sign out of the browser"
+msgstr "刪除同步資料（包含 web 應用）並從瀏覽器登出"
+
+#: ../cleaners/secondlife_viewer.xml ../cleaners/warzone2100.xml
+#: ../cleaners/nexuiz.xml ../cleaners/hippo_opensim_viewer.xml
+#: ../cleaners/gl-117.xml ../cleaners/tremulous.xml
+msgid "Game"
+msgstr "遊戲"
+
+#. This software edits metadata tags, such as title and artist, in audio files
+#: ../cleaners/easytag.xml
+msgid "Audio files tagger"
+msgstr "音樂標籤編輯器"
+
+#: ../cleaners/journald.xml
+msgid "System journals"
+msgstr "系統日誌"
+
+#: ../cleaners/journald.xml
+msgid "Clean old system journals"
+msgstr "清理過時的系統日誌"
+
+#: ../cleaners/emesene.xml
+msgid "Delete the avatars and emoticons cache"
+msgstr "刪除大頭貼與表情符號快取"
+
+#: ../cleaners/filezilla.xml ../cleaners/smartftp.xml
+#: ../cleaners/transmission.xml ../cleaners/gftp.xml ../cleaners/amule.xml
+#: ../cleaners/vuze.xml
+msgid "File transfer client"
+msgstr "檔案傳輸客戶端"
+
+#: ../cleaners/epiphany.xml
+msgid "Places"
+msgstr "位置"
+
+#: ../cleaners/epiphany.xml
+msgid ""
+"A database of URLs including bookmarks, favicons, and a history of visited "
+"websites"
+msgstr "保存書籤、網站圖標與造訪網頁紀錄的 URL 資料庫"
+
+#: ../cleaners/epiphany.xml
+msgid "This option deletes all bookmarks."
+msgstr "這個選項將刪除所有書籤。"
+
+#: ../cleaners/gpodder.xml ../cleaners/exaile.xml
+msgid "Downloaded podcasts"
+msgstr "下載的播客"
+
+#: ../cleaners/gpodder.xml ../cleaners/exaile.xml
+msgid "Delete downloaded podcasts"
+msgstr "刪除下載的 Podcast（播客）"
+
+#: ../cleaners/geary.xml ../cleaners/thunderbird.xml ../cleaners/evolution.xml
+msgid "Email client"
+msgstr "郵件客戶端"
+
+#: ../cleaners/geary.xml
+msgid "Attachments"
+msgstr "附件"
+
+#: ../cleaners/geary.xml
+msgid "Sync conflict"
+msgstr "同步衝突"
+
+#: ../cleaners/geary.xml ../cleaners/deepscan.xml
+msgid "This option is slow."
+msgstr "這個選項將花費不少時間。"
+
+#: ../cleaners/wine.xml
+msgid "Compatibility layer for Windows software"
+msgstr "Windows 軟體兼容層"
+
+#: ../cleaners/thumbnails.xml ../cleaners/windows_explorer.xml
+msgid "Thumbnails"
+msgstr "縮圖"
+
+#: ../cleaners/thumbnails.xml
+msgid "Icons for files on the system"
+msgstr "系統上檔案的縮圖"
+
+#: ../cleaners/gnome.xml ../cleaners/kde.xml
+msgid "Desktop environment"
+msgstr "桌面環境"
+
+#. In GNOME 'Run' is the dialog shown when typing ALT+F2'
+#. In Windows 'Run' is the dialog in the Start menu
+#: ../cleaners/gnome.xml ../cleaners/windows_explorer.xml
+msgid "Run"
+msgstr "執行"
+
+#: ../cleaners/gnome.xml ../cleaners/windows_explorer.xml
+#: ../cleaners/google_toolbar.xml
+msgid "Search history"
+msgstr "搜尋紀錄"
+
+#: ../cleaners/gnome.xml ../cleaners/windows_explorer.xml
+#: ../cleaners/google_toolbar.xml
+msgid "Delete the search history"
+msgstr "刪除搜尋紀錄"
+
+#: ../cleaners/konqueror.xml
+msgid "Current session"
+msgstr "本次作業階段"
+
+#: ../cleaners/konqueror.xml
+msgid "Delete the current session"
+msgstr "刪除目前的作業階段"
+
+#: ../cleaners/chromium.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml
+msgid "Search engines"
+msgstr "搜尋引擎"
+
+#. 'Factory' means a search engine that is installed by default 'from the factory,' but this is different than a 'default search engine' https://lists.launchpad.net/launchpad-translators/msg00283.html
+#. 'Factory' means a search engine that is installed by default 'from the factory,' but this is different than a 'default search engine' https://lists.launchpad.net/launchpad-translators/msg00283.html
+#. 'Factory' means a search engine that is installed by default 'from the factory,' but this is different than a 'default search engine' https://lists.launchpad.net/launchpad-translators/msg00283.html
+#. 'Factory' means a search engine that is installed by default 'from the factory,' but this is different than a 'default search engine' https://lists.launchpad.net/launchpad-translators/msg00283.html
+#: ../cleaners/chromium.xml ../cleaners/brave.xml ../cleaners/google_chrome.xml
+#: ../cleaners/microsoft_edge.xml
+msgid ""
+"Reset the search engine usage history and delete non-factory search engines, "
+"some of which are added automatically"
+msgstr "重置搜尋引擎的使用紀錄，並刪除非內建的搜尋引擎；其中一些引擎為自動添加"
+
+#: ../cleaners/windows_explorer.xml ../cleaners/nautilus.xml ../cleaners/mc.xml
+msgid "File manager"
+msgstr "檔案管理員"
+
+#. TRANSLATORS: Name of a cleaning option for the history of recently used files.
+#: ../cleaners/windows_explorer.xml ../cleaners/gwenview.xml
+#: ../cleaners/gedit.xml ../cleaners/kde.xml ../bleachbit/Cleaner.py
+msgid "Recent documents list"
+msgstr "最近使用檔案清單"
+
+#: ../cleaners/windows_explorer.xml
+msgid ""
+"This option will reset pinned locations in Quick Access to their defaults."
+msgstr "這個選項將重置「快速存取」下的釘選位置。"
+
+#: ../cleaners/windows_explorer.xml
+msgid "Shellbags"
+msgstr "Shellbags"
+
+#: ../cleaners/windows_explorer.xml
+msgid "Delete the usage date, window position, and other data for folders"
+msgstr "刪除使用日期、視窗位置及目錄相關資料"
+
+#: ../cleaners/windows_explorer.xml
+msgid "This will reset the position of desktop icons."
+msgstr "這將重設桌面圖示的位置。"
+
+#: ../cleaners/windows_explorer.xml
+msgid "This will restart Windows Explorer."
+msgstr "這將會重啟 Windows 檔案總管。"
+
+#: ../cleaners/windows_defender.xml
+msgid "Anti-virus"
+msgstr "防毒軟體"
+
+#: ../cleaners/windows_defender.xml
+msgid "Quarantine"
+msgstr "隔離區"
+
+#: ../cleaners/thunderbird.xml
+msgid ""
+"Deleting the index will reset the configuration of columns in the message "
+"list."
+msgstr "刪除索引將重置消息清單內的欄位設置。"
+
+#: ../cleaners/thunderbird.xml
+msgid "Session restore"
+msgstr "瀏覽狀態還原"
+
+#: ../cleaners/thunderbird.xml
+msgid "Restores the previous session when the browser next starts"
+msgstr "瀏覽器下次啟動時恢復之前的瀏覽狀態"
+
+#: ../cleaners/apt.xml
+msgid "Delete obsolete files"
+msgstr "刪除過時檔案"
+
+#: ../cleaners/apt.xml
+msgid "Package lists"
+msgstr "軟體包清單"
+
+#: ../cleaners/android_studio.xml
+msgid "Development environment"
+msgstr "開發環境"
+
+#: ../cleaners/android_studio.xml
+msgid "Gradle cache"
+msgstr "Gradle 快取"
+
+#: ../cleaners/android_studio.xml
+msgid "Delete downloaded dependencies and build artifacts"
+msgstr "刪除下載的依賴項和構建物"
+
+#: ../cleaners/android_studio.xml
+msgid "Dependencies will need to be downloaded on the next build."
+msgstr "下次構建時需要下載依賴項。"
+
+#: ../cleaners/android_studio.xml
+msgid "IDE cache"
+msgstr "IDE 快取"
+
+#. Cleaner description for vim, VS Code, etc.
+#: ../cleaners/vscode.xml ../cleaners/gedit.xml ../cleaners/vim.xml
+msgid "Editor"
+msgstr "編輯器"
+
+#: ../cleaners/x11.xml
+msgid "Windowing system"
+msgstr "視窗系統"
+
+#: ../cleaners/gimp.xml
+msgid "Graphics editor"
+msgstr "圖像編輯器"
+
+#: ../cleaners/snap.xml
+msgid "Disabled"
+msgstr "停用"
+
+#: ../cleaners/snap.xml
+msgid "Remove disabled packages"
+msgstr "刪除已停用的包"
+
+#: ../cleaners/adobe_reader.xml
+msgid "Document viewer"
+msgstr "文件檢視器"
+
+#: ../cleaners/nautilus.xml
+msgid "Custom folders will be reset."
+msgstr "自定義資料夾將被重置。"
+
+#. Label for Claude coding assistant
+#: ../cleaners/claude.xml
+msgid "AI assistant"
+msgstr "AI 助理"
+
+#. Pre-edit snapshots of files Claude Code changed, used for checkpoint restore
+#: ../cleaners/claude.xml
+msgid "File history"
+msgstr "檔案歷史"
+
+#. Claude Code: checkpoint restore for past sessions. Also, do not translate /restore, which is a command.
+#: ../cleaners/claude.xml
+msgid "Delete the file history used for /restore"
+msgstr "刪除 /restore 使用的檔案歷史"
+
+#. Description for deleting Claude Code sessions
+#: ../cleaners/claude.xml
+msgid "Delete the conversation history"
+msgstr "刪除對話歷史紀錄"
+
+#: ../cleaners/claude.xml
+msgid "You would lose resume, continue, and rewind for past sessions"
+msgstr "您會失去以往對話的恢復、繼續和回退"
+
+#. In Claude Code: captured shell environment used by the Bash tool
+#: ../cleaners/claude.xml
+msgid "Shell snapshots"
+msgstr "Shell 快照"
+
+#: ../cleaners/deepscan.xml
+msgid "Deep scan"
+msgstr "深層掃描"
+
+#: ../cleaners/deepscan.xml
+msgid "Clean files widely scattered across the disk"
+msgstr "清理分散在硬碟各處的檔案"
+
+#: ../cleaners/deepscan.xml
+msgid "Inspect the preview for any files you want to keep."
+msgstr "查看預覽結果以找出您想保留的檔案。"
+
+#: ../cleaners/deepscan.xml
+msgid ""
+"This option is slow. Inspect the preview for files you want to keep, like "
+"those bundled with applications."
+msgstr ""
+"此選項速度較慢。請檢查預覽中是否包含您想要保留的檔案，例如應用程式捆綁的檔"
+"案。"
+
+#: ../cleaners/deepscan.xml
+msgid "VIM swap files under user profile"
+msgstr "使用者帳號下的 VIM 交換檔案"
+
+#: ../cleaners/deepscan.xml
+msgid "VIM swap files across system"
+msgstr "全系統的 VIM 交換檔案"
+
+#: ../cleaners/zoom.xml
+msgid "Recordings"
+msgstr "錄影"
+
+#: ../cleaners/zoom.xml
+msgid "Delete the audio and video recordings"
+msgstr "刪除音訊與視訊錄影"
+
+#: ../cleaners/recoll.xml
+msgid "Delete the search index, a database of words and the files they contain"
+msgstr "刪除搜尋索引庫，裡面保存了字詞與關聯檔案"
+
+#: ../cleaners/skype.xml
+msgid "Installers"
+msgstr "安裝程式"
+
+#: ../cleaners/skype.xml
+msgid "Delete cached patches and installers"
+msgstr "刪除暫存的安裝與修補程式"
+
+#: ../cleaners/seamonkey.xml ../cleaners/internet_explorer.xml
+msgid "Download history"
+msgstr "下載紀錄"
+
+#: ../cleaners/seamonkey.xml
+msgid "List of files downloaded"
+msgstr "下載檔案清單"
+
+#: ../cleaners/seamonkey.xml
+msgid "Delete the list of visited web pages"
+msgstr "刪除瀏覽網頁清單"
+
+#. Cleaning option that deletes AI models in a web browser
+#: ../cleaners/google_chrome.xml
+msgid "AI"
+msgstr "AI"
+
+#: ../cleaners/google_chrome.xml
+msgid "Delete the AI models"
+msgstr "刪除 AI 模型"
+
+#: ../cleaners/google_chrome.xml
+msgid "Old versions"
+msgstr "舊版本"
+
+#: ../cleaners/google_chrome.xml
+msgid "Delete program files from previous versions left behind by updates"
+msgstr "刪除更新留下的先前版本程式文件"
+
+#. Torrent software can block a list of IP addresses, such as those that may belong to malware or anti-piracy organizations
+#: ../cleaners/transmission.xml
+msgid "Blocklists"
+msgstr "封鎖名單"
+
+#: ../cleaners/transmission.xml
+msgid "Blocklists will need to be updated to work."
+msgstr "黑名單需要更新才能工作。"
+
+#: ../cleaners/transmission.xml
+msgid "Torrents"
+msgstr "Torrent"
+
+#: ../cleaners/transmission.xml
+msgid "Delete the torrents (just the metadata but not the files described)"
+msgstr "刪除 torrent 種子檔（不會刪除下載的檔案）"
+
+#: ../cleaners/transmission.xml ../cleaners/vuze.xml
+msgid "Statistics"
+msgstr "統計資料"
+
+#. TRANSLATORS: Description of the Memory dump cleaning option.
+#: ../cleaners/transmission.xml ../cleaners/vlc.xml ../bleachbit/Cleaner.py
+msgid "Delete the file"
+msgstr "刪除檔案"
+
+#: ../cleaners/tremulous.xml
+msgid "Delete the list of game servers"
+msgstr "刪除遊戲伺服器清單"
+
+#: ../cleaners/profanity.xml
+msgid "Downloaded files"
+msgstr "已下載的檔案"
+
+#: ../cleaners/teamviewer.xml
+msgid "Remote control software"
+msgstr "遠端控制軟體"
+
+#. TRANSLATORS: Name of a cleaning option for Windows crash dump files.
+#: ../cleaners/vlc.xml ../bleachbit/Cleaner.py
+msgid "Memory dump"
+msgstr "記憶體傾印"
+
+#: ../cleaners/screenlets.xml
+msgid "Desktop widgets"
+msgstr "桌面小部件"
+
+#: ../cleaners/winrar.xml
+msgid "File archiver"
+msgstr "檔案壓縮器"
+
+#: ../cleaners/amule.xml
+msgid "Known files history"
+msgstr "已知檔案紀錄"
+
+#. https://wiki.amule.org/wiki/Friend
+#: ../cleaners/amule.xml
+msgid "Known clients and friends"
+msgstr "已知客戶端與朋友"
+
+#: ../cleaners/vim.xml
+msgid ""
+"Delete ~/.viminfo which includes file history, command history, and buffers"
+msgstr "刪除 ~/.viminfo；裡面保存了檔案歷史、指令紀錄與緩衝區"
+
+#: ../cleaners/discord.xml
+msgid ""
+"Delete the web cache, which reduces time to display revisited pages. This "
+"also clears favorited GIFs."
+msgstr "刪除網頁快取；快取可以加速顯示重新造訪的頁面。將一同清除喜好的 GIF。"
+
+#: ../org.bleachbit.BleachBit.desktop
+msgid "Unnecessary file cleaner"
+msgstr "無用檔案清理器"
+
+#: ../org.bleachbit.BleachBit.desktop ../org.bleachbit.BleachBit.metainfo.xml
+msgid "Free space and maintain privacy"
+msgstr "釋放空間並維護隱私"
+
+#. TRANSLATORS: Name of the developers
+#: ../org.bleachbit.BleachBit.metainfo.xml
+msgid "Andrew Ziem and contributors"
+msgstr "Andrew Ziem 和貢獻者們"
+
+#: ../org.bleachbit.BleachBit.metainfo.xml
+msgid ""
+"PurgeBit frees disk space and maintains privacy by quickly removing "
+"unnecessary files such as cache, cookies, browser history, temporary files, "
+"and system logs. It can also shred files and clean free disk space to "
+"prevent data recovery."
+msgstr ""
+"PurgeBit 可快速刪除緩存、Cookie、瀏覽器歷史記錄、暫存檔和系統日誌等非必要檔"
+"案來釋放磁碟空間並維持隱私。它也能粉碎檔案並清理空閒的磁盤空間以避免數據恢"
+"復。"
+
+#. TRANSLATORS: Caption for screenshot
+#: ../org.bleachbit.BleachBit.metainfo.xml
+msgid "Default dark mode, showing found junk files"
+msgstr "預設深色模式，顯示找到的垃圾檔案"
+
+#. TRANSLATORS: Dialog shown when an older version is detected. {prodname} is replaced with the product name. Do not translate placeholder.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:ALREADY_INSTALLED"
+msgid ""
+"${prodname} is already installed.\n"
+"Click 'OK' to uninstall the old version before upgrading, or click 'Cancel' "
+"to abort the upgrade."
+msgstr ""
+"${prodname} 已安裝。\n"
+"點擊「確定」在升級前卸載舊版本，或點擊「取消」終止升級。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:BLEACHBIT_MUI_FINISHPAGE_LINK"
+msgid "Visit the ${prodname} website"
+msgstr "訪問 ${prodname} 網站"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:INSTALLER_CAPTION"
+msgid "${prodname} ${VERSION} Setup"
+msgstr "${prodname} ${VERSION} 安裝包"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIPRINT1"
+msgid ""
+"The next step is building the font cache, during which a black console "
+"window may appear."
+msgstr "下一步是構建字體緩存，在此期間可能出現黑色的控制台視窗。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIPRINT2"
+msgid ""
+"It usually finishes in one minute, but sometimes it takes up to ten minutes."
+msgstr "通常會在一分鐘內完成，但有時會最多花十分鐘。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ADMIN_ACCOUNT_LOGIN_REQUIRED"
+msgid ""
+"You need to log in with an account that is a member of the administrators "
+"group to continue."
+msgstr "若要繼續，需要以隸屬於管理員群組的帳號登入。"
+
+#. TRANSLATORS: Message shown on the installation mode page description when admin rights are needed.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ADMIN_CREDENTIALS_REQUIRED"
+msgid "Administrator credentials required."
+msgstr "需要管理員憑證。"
+
+#. TRANSLATORS: Message shown on the installation mode page description when admin rights are needed to uninstall.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ADMIN_UNINSTALL_CREDENTIALS_REQUIRED"
+msgid "Administrator credentials required to uninstall."
+msgstr "卸載需要管理員憑證。"
+
+#. TRANSLATORS: Radio button label. The & sets the keyboard accelerator (hotkey). Place & before the letter that should be the shortcut key.
+#. TRANSLATORS: The character '&' positions the keyboard accelerator key.
+#. TRANSLATORS: For example, '&anyone' sets 'a' as the accelerator key (Alt+a).
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ALL_USERS"
+msgid "For &anyone who uses this computer (all users)"
+msgstr "任何使用此電腦的人（所有用戶）(&A)"
+
+#. TRANSLATORS: Radio button label for Ultra Modern UI (NSIS). Same as MULTIUSER_ALL_USERS but without the & accelerator.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ALL_USERS_UMUI"
+msgid "For anyone who uses this computer (all users)"
+msgstr "任何使用此電腦的人（所有用戶）"
+
+#. TRANSLATORS: Radio button label. The & sets the keyboard accelerator (hotkey). Place & before the letter that should be the shortcut key. {USER} is a placeholder that will be replaced with the Windows username.
+#. TRANSLATORS: The character '&' positions the keyboard accelerator key.
+#. TRANSLATORS: For example, '&anyone' sets 'a' as the accelerator key (Alt+a).
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_CURRENT_USER"
+msgid "For &me ({USER})"
+msgstr "只有我 ({USER})(&M)"
+
+#. TRANSLATORS: Radio button label for Ultra Modern UI (NSIS). Same as MULTIUSER_CURRENT_USER but without the & accelerator. {USER} is a placeholder that will be replaced with the Windows username.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_CURRENT_USER_UMUI"
+msgid "For me ({USER})"
+msgstr "只有我 ({USER})"
+
+#. TRANSLATORS: Error message shown in dialog box during installation on Windows. {ERROR} is a placeholder that will be replaced with the error details.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ELEVATION_ERROR"
+msgid "Unable to elevate, error {ERROR}."
+msgstr "無法提升權限，錯誤 {ERROR}。"
+
+#. TRANSLATORS: Error message shown in a dialog box when Windows does not support elevation.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_ELEVATION_NOT_SUPPORTED"
+msgid "The operating system doesn't support elevation."
+msgstr "作業系統不支持提升權限。"
+
+#. TRANSLATORS: Radio button option for the method of installation. {VERSION} and {FOLDER} are placeholders replaced by the installer with the installed version and folder path.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_INSTALLED_ALL_USERS"
+msgid "Version {VERSION} is installed for all users in \"{FOLDER}\"."
+msgstr "版本 {VERSION} 為所有用戶安裝於 \"{FOLDER}\"。"
+
+#. TRANSLATORS: Radio button option for the method of installation. {VERSION} and {FOLDER} are placeholders replaced by the installer with the installed version and folder path.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_INSTALLED_CURRENT_USER"
+msgid "Version {VERSION} is installed for the current user in \"{FOLDER}\"."
+msgstr "版本 {VERSION} 為目前用戶安裝於 \"{FOLDER}\"。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_INSTALL_HEADER"
+msgid ""
+"Select whether to install $(^NameDA) for all users or for the current user."
+msgstr "選擇為所有用戶還是目前用戶安裝 $(^NameDA)。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_INSTALL_PAGE_SUBTITLE"
+msgid "Choose for which users to install $(^NameDA)."
+msgstr "選擇為那些用戶安裝 $(^NameDA)。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_INVALID_PARAMS"
+msgid "Invalid combination of parameters."
+msgstr "無效的參數組合。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_LOGON_SERVICE_NOT_RUNNING"
+msgid "Unable to elevate, Secondary Logon service not running."
+msgstr "無法提權，Secondary Logon 服務未在運行。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_NEW_INSTALLATION_ALL_USERS"
+msgid "Fresh installation for all users."
+msgstr "所有用戶的全新安裝。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_NEW_INSTALLATION_CURRENT_USER"
+msgid "Fresh installation for the current user."
+msgstr "目前用戶的全新安裝。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_NOT_INSTALLED"
+msgid "There is no installation of $(^NameDA)."
+msgstr "未安裝 $(^NameDA)。"
+
+#. TRANSLATORS: Title of the installation mode page in the Windows installer. User selects whether to install for all users or the current user.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_PAGE_TITLE"
+msgid "Choose Users"
+msgstr "選擇用戶"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_REINSTALL_DIFF_VERSION_ALL_USERS"
+msgid ""
+"Uninstall version {OLD_VERSION} and install version {VERSION} for all users."
+msgstr "為所有用戶卸載版本 {OLD_VERSION} 並安裝版本 {VERSION}。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_REINSTALL_DIFF_VERSION_CURRENT_USER"
+msgid ""
+"Uninstall version {OLD_VERSION} and install version {VERSION} for the "
+"current user."
+msgstr "為目前用戶卸載版本 {OLD_VERSION} 並安裝版本 {VERSION}。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_REINSTALL_SAME_VERSION_ALL_USERS"
+msgid "Reinstall version {VERSION} for all users."
+msgstr "為所有用戶重新安裝版本 {VERSION}。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_REINSTALL_SAME_VERSION_CURRENT_USER"
+msgid "Reinstall version {VERSION} for the current user."
+msgstr "為目前用戶重新安裝版本 {VERSION}。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_RUN_AS_ADMIN"
+msgid "You need to run this program as an administrator."
+msgstr "需要以管理員身份執行此程序。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_UNINSTALL_HEADER"
+msgid ""
+"$(^NameDA) is installed both for all users and for the current user.\n"
+"Select which installation to remove."
+msgstr ""
+"所有用戶與目前用戶均已安裝 $(^NameDA)。\n"
+"選擇要刪除哪個安裝。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:MULTIUSER_UNINSTALL_PAGE_SUBTITLE"
+msgid "Choose for which users to remove $(^NameDA)."
+msgstr "選擇為哪些用戶移除 $(^NameDA)。"
+
+#. TRANSLATORS: Dialog shown when the installer detects an old version of Windows. Instructs the user to click OK to download a compatible version or Cancel to exit.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:OLD_WINDOWS_WARNING"
+msgid ""
+"This version of PurgeBit requires Windows 10 or later. To download a "
+"compatible version for your system, click OK. To exit the installer, click "
+"Cancel."
+msgstr ""
+"此版本的 PurgeBit 最低需求為 Windows 10。點選「確定」下載和您的系統相容的版"
+"本。點選「取消」離開安裝程式。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_CORE_DESCRIPTION"
+msgid ""
+"These are the basic files needed for ${prodname} to function (required)."
+msgstr "這些是 ${prodname} 工作需要的基本檔案（必需）。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_CORE_NAME"
+msgid "Core files (required)"
+msgstr "核心文件（必需）"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_DESKTOP_DESCRIPTION"
+msgid "Create a shortcut on the desktop."
+msgstr "在桌面上建立捷徑。"
+
+#. TRANSLATORS: Name of the desktop section in the Windows installer: user selects which desktop items to install.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_DESKTOP_NAME"
+msgid "Desktop"
+msgstr "桌面"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_INTEGRATE_SHRED_DESCRIPTION"
+msgid ""
+"Add an option to delete files from the file context menu in Windows Explorer."
+msgstr "添加 Windows 檔案總管選項，從檔案右鍵選單刪除檔案。"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_INTEGRATE_SHRED_NAME"
+msgid "Integrate Shred"
+msgstr "集成粉碎"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_QUICK_LAUNCH_DESCRIPTION"
+msgid "Create a shortcut on the Quick Launch bar."
+msgstr "在快速啟動欄建立捷徑。"
+
+#. TRANSLATORS: Name of the quick launch section in the Windows installer: quick launch is a toolbar in the Windows taskbar that allows users to quickly access frequently used programs.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_QUICK_LAUNCH_NAME"
+msgid "Quick Launch"
+msgstr "快速啟動"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_SHORTCUTS_DESCRIPTION"
+msgid "Create shortcuts to ${prodname}"
+msgstr "建立 ${prodname} 捷徑"
+
+#. TRANSLATORS: Name of the shortcuts section in the Windows installer: user selects which shortcuts to install.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_SHORTCUTS_NAME"
+msgid "Shortcuts"
+msgstr "捷徑"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_START_MENU_DESCRIPTION"
+msgid "Create a shortcut in the Start menu."
+msgstr "在開始選單內建立捷徑。"
+
+#. TRANSLATORS: Name of the start menu section in the Windows installer: user selects which start menu items to install.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_START_MENU_NAME"
+msgid "Start menu"
+msgstr "開始選單"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_TRANSLATIONS_DESCRIPTION"
+msgid ""
+"Install language files to use ${prodname} in your preferred local language."
+msgstr "安裝語言文件用偏好的本地語言使用 ${prodname}。"
+
+#. TRANSLATORS: Name of the translations section in the Windows installer: user selects which translations to install.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_TRANSLATIONS_NAME"
+msgid "Translations"
+msgstr "本地化"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SECTION_UNINSTALL_DESCRIPTION"
+msgid "Add an uninstall program."
+msgstr "添加卸載程序。"
+
+#. TRANSLATORS: Shortcut name for a desktop shortcut that opens a debugging terminal.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SHORTCUT_DEBUGGING_TERMINAL"
+msgid "${prodname} Debugging Terminal"
+msgstr "${prodname} 除錯終端"
+
+#. TRANSLATORS: Shortcut name for a desktop shortcut that runs without UAC elevation (admin privileges).
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SHORTCUT_NO_UAC"
+msgid "${prodname} (No UAC)."
+msgstr "${prodname}（無 UAC）。"
+
+#. TRANSLATORS: Context menu item in Windows Explorer for securely shredding files.
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:SHRED_SHELL_MENU"
+msgid "Shred with ${prodname}"
+msgstr "用 ${prodname} 粉碎"
+
+#: windows/NsisInclude/NsisMultiUserLang.nsh
+msgctxt "nsis:UNINSTALL_TEXT"
+msgid ""
+"${prodname} will be uninstalled from the following folder.\n"
+"Click Uninstall to start the uninstallation.\n"
+"WARNING: The uninstaller completely removes the installation directory, "
+"including any files (such as custom cleaners) that you may have added or "
+"changed."
+msgstr ""
+"將從以下資料夾卸載 ${prodname}。\n"
+"點擊「卸載」啟動卸載作業。\n"
+"警告：卸載程序將徹底刪除安裝目錄，包含任何您已添加或更改的檔案（如自定義清理"
+"器）。"
+
+#. TRANSLATORS: Multi-value variables are explained
+#. in the online documentation. Basically, they are like
+#. an environment variable, but each multi-value variable
+#. can have multiple values. They're a way to make CleanerML
+#. files more concise.
+#: ../bleachbit/Action.py
+msgid "Deep scan does not support multi-value variables."
+msgstr "深層掃描不支援多值變量。"
+
+#. TRANSLATORS: This is a lint-style warning that there seems to be a
+#. mild mistake in the CleanerML file because walk.all is expected to
+#. be used with directories instead of with files. Do not translate
+#. search="walk.all" and path="%s"
+#: ../bleachbit/Action.py
+#, python-format
+msgid "search=\"walk.all\" used with regular file path=\"%s\""
+msgstr "在 search=\"walk.all\" 下使用普通檔案路徑 \"%s\""
+
+#. TRANSLATORS: This is a lint-style warning that the CleanerML file
+#. specified a search for glob, but the path specified didn't have any
+#. wildcard patterns. Therefore, maybe the developer either missed
+#. the wildcard or should search using path="file" which does not
+#. expect or support wildcards in the path.
+#: ../bleachbit/Action.py
+#, python-format
+msgid "path=\"%s\" is not a glob pattern"
+msgstr "path=\"%s\" 不是一個通配符匹配"
+
+#. TRANSLATORS: This is the name of a cleaning action. 'Clean' is a verb.
+#. It shows in the log of actions performed.
+#: ../bleachbit/Action.py
+msgid "Clean cookies"
+msgstr "清除 Cookie"
+
+#. TRANSLATORS: %s is the command line to be executed
+#: ../bleachbit/Action.py
+#, python-format
+msgid "Run external command: %s"
+msgstr "執行外部指令：%s"
+
+#. TRANSLATORS: This is the name of an action. 'Refresh' is a verb.
+#: ../bleachbit/Action.py
+msgid "Refresh Windows shell"
+msgstr "刷新 Windows shell"
+
+#: ../bleachbit/Bootstrap.py
+msgid ""
+"To run a GUI application on Wayland with root, allow access with this "
+"command:\n"
+"xhost si:localuser:root\n"
+"See more about xhost at https://docs.bleachbit.org/doc/frequently-asked-"
+"questions.html"
+msgstr ""
+"要以 root 在 Wayland 執行圖形應用，使用這個指令允許存取：\n"
+"xhost si:localuser:root\n"
+"更多 xhost 相關信息可至 https://docs.bleachbit.org/doc/frequently-asked-"
+"questions.html"
+
+#: ../bleachbit/CleanerML.py
+#, python-brace-format
+msgid ""
+"Error in handle_cleaner_option() for cleaner id = {cleaner_id}, option "
+"XML={option_xml}"
+msgstr ""
+"函式 handle_cleaner_option() 錯誤：cleaner id = {cleaner_id}, option "
+"XML={option_xml}"
+
+#. TRANSLATORS: Warning printed to the log. %s expands to the
+#. path of the XML cleaner file that was skipped
+#: ../bleachbit/CleanerML.py
+#, python-format
+msgid "Ignoring cleaner because it is world writable: %s"
+msgstr "忽略具有「全域寫入」權限的清理器：%s"
+
+#. TRANSLATORS: Warning printed to the log. %s expands to the
+#. path of the XML cleaner file whose directory is world
+#. writable.
+#: ../bleachbit/CleanerML.py
+#, python-format
+msgid "Ignoring cleaner because its directory is world writable: %s"
+msgstr "已忽略清理器，因其所在目錄開放所有人寫入：%s"
+
+#. TRANSLATORS: Error message printed to the log.
+#. %s expands to the path of the XML cleaner file
+#: ../bleachbit/CleanerML.py
+#, python-format
+msgid "Error reading cleaner: %s"
+msgstr "讀取清理器錯誤：%s"
+
+#. TRANSLATORS: Cleaner name shown in the list of applications.
+#: ../bleachbit/Cleaner.py
+msgid "System"
+msgstr "系統"
+
+#. TRANSLATORS: Description of the System cleaner.
+#: ../bleachbit/Cleaner.py
+msgid "The system in general"
+msgstr "系統通用"
+
+#. TRANSLATORS: desktop entries are .desktop files in Linux that
+#. make up the application menu (the menu that shows BleachBit,
+#. Firefox, and others).  The .desktop files also associate file
+#. types, so clicking on an .html file in Nautilus brings up
+#. Firefox.
+#. More information:
+#. https://specifications.freedesktop.org/menu/latest/index.html#introduction
+#: ../bleachbit/Cleaner.py
+msgid "Broken desktop files"
+msgstr "損毀的 .desktop 檔"
+
+#. TRANSLATORS: Description of the Broken desktop files cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Delete broken application menu entries and file associations"
+msgstr "刪除損毀的應用程式選項與檔案關聯"
+
+#. TRANSLATORS: Localizations are files supporting specific
+#. languages, so applications appear in Spanish, etc.
+#: ../bleachbit/Cleaner.py
+msgid "Localizations"
+msgstr "本地化"
+
+#. TRANSLATORS: Description of the Localizations cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Delete files for unwanted languages"
+msgstr "刪除不需要的語言檔案"
+
+#. TRANSLATORS: Warning for the Localizations cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Configure this option in the preferences."
+msgstr "這個選項可在「偏好設定」調整。"
+
+#. TRANSLATORS: 'Rotated logs' refers to old system log files.
+#. Linux systems often have a scheduled job to rotate the logs
+#. which means compress all except the newest log and then delete
+#. the oldest log. You could translate this as 'old logs.'
+#: ../bleachbit/Cleaner.py
+msgid "Rotated logs"
+msgstr "循環日誌"
+
+#. TRANSLATORS: Description of the Rotated logs cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Delete old system logs"
+msgstr "刪除過時的系統日誌"
+
+#. TRANSLATORS: Name of a cleaning option. Trash is a noun.
+#: ../bleachbit/Cleaner.py
+msgid "Trash"
+msgstr "垃圾桶"
+
+#. TRANSLATORS: Description of the Trash cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Empty the trash"
+msgstr "清空垃圾桶"
+
+#. TRANSLATORS: Name of a cleaning option for system memory.
+#: ../bleachbit/Cleaner.py ../bleachbit/Worker.py
+msgid "Memory"
+msgstr "記憶體"
+
+#. TRANSLATORS: 'free' means 'unallocated'
+#: ../bleachbit/Cleaner.py
+msgid "Wipe the swap and free memory"
+msgstr "擦除 swap 空間並釋放記憶體"
+
+#. TRANSLATORS: Warning for the experimental Memory cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "This option is experimental and may cause system problems."
+msgstr "此為實驗性選項，有可能導致系統出現問題。"
+
+#. TRANSLATORS: This is a label for the option to clear the system DNS cache.
+#: ../bleachbit/Cleaner.py
+msgid "DNS cache"
+msgstr "DNS 快取"
+
+#. TRANSLATORS: Name of cleaning option. 'Prefetch' is Microsoft Windows jargon.
+#: ../bleachbit/Cleaner.py
+msgid "Prefetch"
+msgstr "Prefetch（預取）"
+
+#. TRANSLATORS: Name of a cleaning option for the Windows recycle bin.
+#: ../bleachbit/Cleaner.py
+msgid "Recycle bin"
+msgstr "回收桶"
+
+#. TRANSLATORS: Description of the Recycle bin cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Empty the recycle bin"
+msgstr "清空回收桶"
+
+#. TRANSLATORS: Name for cleaning option. 'Update' is an adjective to
+#. describe the kind of uninstallers.
+#: ../bleachbit/Cleaner.py
+msgid "Update uninstallers"
+msgstr "更新的卸載程序"
+
+#. TRANSLATORS: Description of cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid ""
+"Delete uninstallers for Microsoft updates including hotfixes, service packs, "
+"and Internet Explorer updates"
+msgstr "刪除微軟更新卸載程序，包含熱補丁、服務包和網頁瀏覽器更新"
+
+#. TRANSLATORS: Warning shown when selecting an option.
+#: ../bleachbit/Cleaner.py
+msgid "This option may prevent uninstalling some updates."
+msgstr "此選項可能阻止卸載某些更新。"
+
+#. TRANSLATORS: Name of a cleaning option. Clipboard is a noun.
+#: ../bleachbit/Cleaner.py
+msgid "Clipboard"
+msgstr "剪貼簿"
+
+#. TRANSLATORS: Description of the Clipboard cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "The desktop environment's clipboard used for copy and paste operations"
+msgstr "桌面環境下用於複製、貼上的剪貼簿"
+
+#. TRANSLATORS: "Custom" is an option allowing the user to specify which
+#. files and folders will be erased.
+#. TRANSLATORS: Sidebar label for the page where users add their own paths to clean.
+#. Short label meaning "Custom locations".
+#: ../bleachbit/Cleaner.py ../bleachbit/GuiPreferences.py
+msgid "Custom"
+msgstr "自定義"
+
+#. TRANSLATORS: Description of the Custom cleaning option.
+#: ../bleachbit/Cleaner.py
+msgid "Delete user-specified files and folders"
+msgstr "刪除使用者指定的檔案與資料夾"
+
+#. TRANSLATORS: 'empty' means 'unallocated'
+#: ../bleachbit/Cleaner.py
+msgid "Empty space"
+msgstr "未分配空間"
+
+#. TRANSLATORS: 'empty' means 'unallocated'
+#: ../bleachbit/Cleaner.py
+msgid "Wipe empty space to hide deleted files"
+msgstr "擦除未分配空間隱藏已刪除的檔案"
+
+#. TRANSLATORS: 'Empty' means 'unallocated.'
+#. %s expands to a path such as C:\ or /tmp/
+#. TRANSLATORS: Shows activity in the CLI, and %s is the path to the directory.
+#: ../bleachbit/Cleaner.py ../bleachbit/CLI.py
+#, python-format
+msgid "Wipe empty space in %s"
+msgstr "擦除 %s 中的未分配空間"
+
+#. TRANSLATORS: Progress message shown typically on startup.
+#. 'Native' refers to the .xml cleaners designed for this application,
+#. as contrasted to Winapp2.ini, which is native to another application.
+#. 'Loading' is a present participle.
+#. To indicate an ongoing operation, include the ellipsis as literal
+#. Unicode (…) or as Unicode escape (\u2026).
+#: ../bleachbit/Cleaner.py
+msgid "Loading native cleaners…"
+msgstr "正在載入自帶的清理器…"
+
+#. TRANSLATORS: Progress message shown typically on startup.
+#. 'Importing' is a present participle.
+#. To indicate an ongoing operation, include the ellipsis as literal
+#. Unicode (…) or as Unicode escape (\u2026).
+#: ../bleachbit/Cleaner.py
+msgid "Importing cleaners from Winapp2.ini…"
+msgstr "正在從 Winapp2.ini 匯入清理器…"
+
+#. TRANSLATORS: %s is the path of the drive whose empty space will be wiped.
+#: ../bleachbit/Cleaner.py
+#, python-format
+msgid "Wipe empty space %s"
+msgstr "擦除未分配空間 %s"
+
+#. TRANSLATORS: Error shown on CLI, and %s is the name of a cleaning action
+#: ../bleachbit/CLI.py
+#, python-format
+msgid "not a valid cleaner: %s"
+msgstr "非有效清理器：%s"
+
+#. TRANSLATORS: Error shown on CLI, and %s is the name of a cleaning action
+#: ../bleachbit/CLI.py
+#, python-format
+msgid "Wildcard characters are not allowed in --except: %s"
+msgstr "不允許通配符，%s 除外"
+
+#. TRANSLATORS: This is the command line usage.  Don't translate
+#. %prog, but do translate options, cleaner, and option.
+#. Don't translate and add "usage:" - it gets added by Python.
+#. More information about the command line is here
+#. https://www.bleachbit.org/documentation/command-line
+#: ../bleachbit/CLI.py
+msgid "usage: %prog [options] cleaner.option1 [cleaner.option2 ...]"
+msgstr "用法：%prog [options] cleaner.option1 [cleaner.option2 ...]"
+
+#. TRANSLATORS: Help for the --list-cleaners command on the CLI,
+#. and 'list' is a verb
+#: ../bleachbit/CLI.py
+msgid "list cleaners"
+msgstr "列出清理器"
+
+#. TRANSLATORS: Help for the --preview command on the CLI,
+#. and 'preview' is a verb
+#: ../bleachbit/CLI.py
+msgid "preview files to be deleted and other changes"
+msgstr "預覽即將刪除的檔案與其他變更"
+
+#. TRANSLATORS: Help for the --clean command on the CLI
+#: ../bleachbit/CLI.py
+msgid "run cleaners to delete files and make other permanent changes"
+msgstr "用清理器刪除檔案並套用其他永久變更"
+
+#. TRANSLATORS: Help for the --shred command on the CLI,
+#. and 'shred' is a verb
+#: ../bleachbit/CLI.py
+msgid "shred specific files or folders"
+msgstr "粉碎指定的檔案或資料夾"
+
+#. TRANSLATORS: Help for the --wipe-empty-space
+#. command on the CLI, and 'wipe' is a verb
+#: ../bleachbit/CLI.py
+msgid "wipe empty space in the given paths"
+msgstr "擦除指定路徑下的未分配空間"
+
+#. TRANSLATORS: Help for the --overwrite option on the CLI,
+#. and 'overwrite' is a verb
+#: ../bleachbit/CLI.py
+msgid "overwrite files to hide contents"
+msgstr "覆寫檔案以隱藏內容"
+
+#. TRANSLATORS: Help for the --gui option on the CLI,
+#. and 'launch' is a verb
+#: ../bleachbit/CLI.py
+msgid "launch the graphical interface"
+msgstr "啟動圖形介面"
+
+#. TRANSLATORS: Help for the --preset option on the CLI,
+#. and 'use' is a verb, referring to enabling options set earlier.
+#: ../bleachbit/CLI.py
+msgid "use options set in the graphical interface"
+msgstr "採用圖形介面的選項設定"
+
+#. TRANSLATORS: Help for the --all-but-warning option on the CLI,
+#. and 'enable' is a verb.
+#: ../bleachbit/CLI.py
+msgid "enable all options that do not have a warning"
+msgstr "啟用所有無警告的選項"
+
+#. TRANSLATORS: Help for the --except option on the CLI,
+#. and 'exclude' is a verb.
+#: ../bleachbit/CLI.py
+msgid "exclude cleaner options (can be repeated, comma-separated)"
+msgstr "排除清理規則選項（可重複，以逗號分隔）"
+
+#. TRANSLATORS: Help for the --debug option on the CLI,
+#. and 'set' is a verb.
+#: ../bleachbit/CLI.py
+msgid "set log level to verbose"
+msgstr "設定日誌層級為詳盡 (verbose)"
+
+#. TRANSLATORS: Help for --debug-log option on the CLI.
+#: ../bleachbit/CLI.py
+msgid "log debug messages to file"
+msgstr "記錄除錯訊息至檔案"
+
+#. TRANSLATORS: Help for --version option on the CLI.
+#: ../bleachbit/CLI.py
+msgid "output version information and exit"
+msgstr "輸出版本資訊後退出"
+
+#. TRANSLATORS: Help for --no-uac option on the CLI.
+#: ../bleachbit/CLI.py
+msgid "do not prompt for administrator privileges"
+msgstr "不要出現要求管理員權限的對話框"
+
+#. TRANSLATORS: Error message shown on CLI.
+#: ../bleachbit/CLI.py
+msgid ""
+"Specify only one of these commands: --list-cleaners, --wipe-empty-space, --"
+"preview, --clean, --shred"
+msgstr ""
+"以下指令必須擇一執行：--list-cleaners, --wipe-empty-space, --preview, --"
+"clean, --shred"
+
+#. TRANSLATORS: Error message on the CLI.
+#: ../bleachbit/CLI.py
+msgid "No directories given for --wipe-empty-space"
+msgstr "未指定目錄給 --wipe-empty-space"
+
+#. TRANSLATORS: Log message on the CLI.
+#: ../bleachbit/CLI.py
+msgid "Wiping empty space can take a long time."
+msgstr "擦除未分配區域會花費很長時間。"
+
+#. TRANSLATORS: Error message on the CLI.
+#: ../bleachbit/CLI.py
+msgid "No operations selected. Specify cleaner options."
+msgstr "沒有選中操作。請指定清理器選項。"
+
+#. TRANSLATORS: '--overwrite' and '--clean' are command line options
+#: ../bleachbit/CLI.py
+msgid "--overwrite is intended only for use with --clean"
+msgstr "--overwrite 必須與 --clean 搭配使用"
+
+#. TRANSLATORS: This is the label in the log indicating a path
+#. was skipped because it matches the keep list
+#: ../bleachbit/Command.py
+msgid "Skip"
+msgstr "跳過"
+
+#. TRANSLATORS: Label in the log indicating a path will be deleted
+#. (for previews) or was actually deleted (clean mode).
+#: ../bleachbit/Command.py
+msgid "Delete"
+msgstr "刪除"
+
+#. TRANSLATORS: Warning message shown in the progress log.
+#: ../bleachbit/Command.py
+msgid ""
+"At least one file was locked by another process, so its contents could not "
+"be overwritten. It will be marked for deletion upon system reboot."
+msgstr ""
+"至少一份檔案被其他程序鎖定，無法覆寫其內容。將於下次重啟系統後標記檔案為待刪"
+"除。"
+
+#. TRANSLATORS: Label in the log when the file will be deleted
+#. when the system reboots. 'Mark' is a verb.
+#: ../bleachbit/Command.py
+msgid "Mark for deletion"
+msgstr "標記為待刪除"
+
+#. TRANSLATORS: The file will be truncated to 0 bytes in length
+#: ../bleachbit/Command.py
+msgid "Truncate"
+msgstr "內容清空"
+
+#. TRANSLATORS: A label of a command to delete a Windows registry key
+#: ../bleachbit/Command.py
+msgid "Delete registry key"
+msgstr "刪除登錄機碼"
+
+#. TRANSLATORS: Button label on (1) the headerbar and (2) the chaff dialog.
+#. 'Abort' is a verb.
+#: ../bleachbit/Constant.py
+msgid "Abort"
+msgstr "中止"
+
+#. TRANSLATORS: This is the name of a cleaning action. 'Clean' is a verb.
+#. It shows in the log of actions that would be performed (preview mode) or
+#. in the log of actions that are performed (clean mode).
+#: ../bleachbit/Constant.py
+msgid "Clean file"
+msgstr "清理檔案"
+
+#. TRANSLATORS: This message is used in three places (1) label at top of the
+#. preferences dialog (2) confirmation dialog when enabling the cleaning option
+#. (3) log message when starting to clean empty space.
+#: ../bleachbit/Constant.py
+msgid ""
+"Wiping empty space removes traces of files that were deleted without "
+"shredding, but it will not free additional disk space. The process can take "
+"a very long time and may temporarily slow your computer. It is not necessary "
+"if your drive is protected with full-disk encryption. The method works best "
+"on traditional hard drives. On solid-state drives, it is less reliable, and "
+"frequent use contributes to wear."
+msgstr ""
+"擦除未分配空間可刪除未經粉碎操作刪除的文件殘留痕跡，但不會釋放額外的磁碟空"
+"間。此作業相當耗時間，並可能暫時降低電腦速度。如果您的磁碟已啟用全盤加密，則"
+"無需進行此操作。此方法在傳統機械硬碟上效果最佳。在固態硬碟上，此方法可靠性較"
+"低，且頻繁使用會加速耗損。"
+
+#. TRANSLATORS: Error message shown in the infobar or notice shown in a tooltip.
+#. Expert mode is an option in the preferences to relax guardrails.
+#: ../bleachbit/Constant.py
+msgid "This option requires expert mode. Enable it in Preferences."
+msgstr "此選項需要專家模式。在「偏好設定」中啟用它。"
+
+#. TRANSLATORS: Log message where %s is the pathname.
+#: ../bleachbit/FileUtilities.py
+#, python-format
+msgid "Directory is not empty: %s"
+msgstr "目錄不為空：%s"
+
+#. TRANSLATORS: Log message where %s is the pathname.
+#: ../bleachbit/FileUtilities.py
+#, python-format
+msgid "Skipping mount point: %s"
+msgstr "跳過掛載點：%s"
+
+#. TRANSLATORS: Log message where %s is the pathname.
+#: ../bleachbit/FileUtilities.py
+#, python-format
+msgid "Device or resource is busy: %s"
+msgstr "裝置或資源忙碌中：%s"
+
+#. TRANSLATORS: Log message where %s is the pathname.
+#: ../bleachbit/FileUtilities.py
+#, python-format
+msgid "Special file type cannot be deleted: %s"
+msgstr "無法刪除特定檔案類型：%s"
+
+#. TRANSLATORS: This is a warning log message. %s is the directory path.
+#: ../bleachbit/FileUtilities.py
+#, python-format
+msgid ""
+"The environment variable TMP refers to a directory that does not exist: %s"
+msgstr "環境變數 TMP 指向一個未存在的目錄：%s"
+
+#. TRANSLATORS: Title of the font check dialog
+#: ../bleachbit/FontCheckDialog.py
+msgid "Font check"
+msgstr "字體檢查"
+
+#. TRANSLATORS: Button label in the font check dialog
+#: ../bleachbit/FontCheckDialog.py
+msgid "Text is okay"
+msgstr "字體正常"
+
+#. TRANSLATORS: Button label in the font check dialog. This is one of
+#. three buttons the user can click to report how the text appears.
+#. The user clicks this if the text is readable but appears fuzzy.
+#: ../bleachbit/FontCheckDialog.py
+msgid "Text is blurry"
+msgstr "字體模糊"
+
+#. TRANSLATORS: Button label in the font check dialog in case the font
+#. looks like an alien language. This is one of three buttons the user
+#. can click to report how the text appears.
+#: ../bleachbit/FontCheckDialog.py
+msgid "Text is unrecognizable"
+msgstr "字體無法辨認"
+
+#. TRANSLATORS: Question shown in the font check dialog displayed
+#. on startup on Windows. There are bugs that for some users the
+#. font is blurry or resembles an alien language.
+#: ../bleachbit/FontCheckDialog.py
+msgid "Does all the text in this window look okay?"
+msgstr "這個視窗内的所有文字看起來都正常嗎？"
+
+#. TRANSLATORS: Title of a file chooser dialog.
+#: ../bleachbit/GuiApplication.py
+msgid "Choose files to shred"
+msgstr "選擇粉碎檔案"
+
+#. TRANSLATORS: Title of a folder chooser dialog.
+#: ../bleachbit/GuiApplication.py
+msgid "Choose folder to shred"
+msgstr "選擇粉碎資料夾"
+
+#. TRANSLATORS: Button label in a folder chooser dialog.
+#. TRANSLATORS: Label for the Delete button in the file choose dialog
+#. and delete confirmation dialog.
+#: ../bleachbit/GuiApplication.py ../bleachbit/GuiBasic.py
+msgid "_Delete"
+msgstr "刪除(_D)"
+
+#. TRANSLATORS: Warning log message when attempting to paste files/folders to shred.
+#: ../bleachbit/GuiApplication.py
+msgid "No paths found in clipboard."
+msgstr "未在剪貼簿找到路徑。"
+
+#. TRANSLATORS: Title of a folder chooser dialog.
+#: ../bleachbit/GuiApplication.py ../bleachbit/GuiPreferences.py
+msgid "Choose a folder"
+msgstr "選擇一個資料夾"
+
+#. TRANSLATORS: Button label in a folder chooser dialog.
+#. Underscore is for accelerator key.
+#: ../bleachbit/GuiApplication.py
+msgid "_OK"
+msgstr "確定(_O)"
+
+#. TRANSLATORS: Title of the 'About' dialog.
+#: ../bleachbit/GuiApplication.py
+msgid "Program to clean unnecessary files"
+msgstr "清除無用檔案的免費開源軟體"
+
+#. TRANSLATORS: License text shown in the 'About' dialog.
+#: ../bleachbit/GuiApplication.py
+msgid ""
+"GNU General Public License version 3 or later.\n"
+"See https://www.gnu.org/licenses/gpl-3.0.txt"
+msgstr ""
+"GNU 通用公共許可證第三版（或是更新版）。\n"
+"詳見 https://www.gnu.org/licenses/gpl-3.0.txt"
+
+#. TRANSLATORS: Maintain the names of translators here.
+#. Launchpad does this automatically for translations
+#. typed in Launchpad. This is a special string shown
+#. in the 'About' box.
+#: ../bleachbit/GuiApplication.py
+msgid "translator-credits"
+msgstr ""
+"Launchpad Contributions:\n"
+"  Cheng-Chia Tseng https://launchpad.net/~zerng07\n"
+"  Pin-hsien Lee https://launchpad.net/~plesry\n"
+"  pan93412 https://launchpad.net/~pan93412\n"
+"  taijuin lee https://launchpad.net/~taijuin"
+
+#. TRANSLATORS: Button label in the system information dialog to
+#. replace the username with a placeholder.
+#: ../bleachbit/GuiApplication.py
+msgid "Anonymize"
+msgstr "匿名化"
+
+#. TRANSLATORS: Label for the Cancel button in several dialog windows:
+#. file chooser, folder choose, delete confirmation, and warning dialogs.
+#. The underscore indicates the accelerator key.
+#: ../bleachbit/GuiBasic.py
+msgid "_Cancel"
+msgstr "取消(_C)"
+
+#. TRANSLATORS: This is a label for the Open button in a file chooser dialog.
+#: ../bleachbit/GuiBasic.py
+msgid "_Open"
+msgstr "開啟(_O)"
+
+#. TRANSLATORS: Title of the delete confirmation dialog.
+#: ../bleachbit/GuiBasic.py
+msgid "Delete confirmation"
+msgstr "刪除確認"
+
+#. TRANSLATORS: This message appears in a dialog window when the user
+#. chooses to shred settings and quit.
+#: ../bleachbit/GuiBasic.py
+msgid ""
+"This function deletes all PurgeBit settings and then quits the application. "
+"Use this to hide your use of PurgeBit or to reset its settings. The next "
+"time you start PurgeBit, the settings will initialize to default values."
+msgstr ""
+"這項功能會刪除所有 PurgeBit 設定並退出應用程式。用這個來隱藏您的 PurgeBit "
+"使用痕跡或重置設定。下次當您啟動 PurgeBit 時，設定將初始化為預設值。"
+
+#. TRANSLATORS: This message appears in a dialog window when the user
+#. asks the user to confirm deleting files when a preview was run.
+#: ../bleachbit/GuiBasic.py
+msgid ""
+"Are you sure you want to permanently delete files according to the selected "
+"operations?  The actual files that will be deleted may have changed since "
+"you ran the preview."
+msgstr "您確定要根據所選操作永久刪除檔案？將刪除的檔案可能跟預覽結果不同。"
+
+#. TRANSLATORS: This message appears in a dialog window when the user
+#. asks the user to confirm deleting files when no preview was run.
+#: ../bleachbit/GuiBasic.py
+msgid "Are you sure you want to permanently delete these files?"
+msgstr "您確定要完全刪除這些檔案？"
+
+#. TRANSLATORS: Check button shown in the confirm delete dialog.
+#. If unchecked, then it will not confirm next time.
+#. TRANSLATORS: Checkbox label in the preferences dialog.
+#. Ask for confirmation before deleting items.
+#: ../bleachbit/GuiBasic.py ../bleachbit/GuiPreferences.py
+msgid "Confirm before delete"
+msgstr "刪除前進行確認"
+
+#. TRANSLATORS: Title of a warning dialog. %(option)s is the name
+#. of the option being enabled (e.g. "shred files").
+#: ../bleachbit/GuiBasic.py
+#, python-format
+msgid "Enable %(option)s"
+msgstr "啟用 %(option)s"
+
+#. TRANSLATORS: Check button label. %(option)s is the name of
+#. the option being enabled (e.g. "shred files").
+#: ../bleachbit/GuiBasic.py
+#, python-format
+msgid "Remember my choice for %(option)s"
+msgstr "記住 %(option)s 的選擇"
+
+#. TRANSLATORS: Button label in a warning dialog to confirm enabling an option.
+#. The underscore is the accelerator key.
+#: ../bleachbit/GuiBasic.py
+msgid "_Enable anyway"
+msgstr "仍要啟用 (_E)"
+
+#. TRANSLATORS: This is an error message shown to root users.
+#. %s expands to a web URL.
+#: ../bleachbit/GuiBasic.py
+#, python-format
+msgid ""
+"Because you are running as root, please manually open this link in a web "
+"browser:\n"
+"%s"
+msgstr ""
+"由於您以 root 身份執行 PurgeBit，請手動於網頁瀏覽器開啟此連結：\n"
+"%s"
+
+#. TRANSLATORS: The question appears in a confirmation dialog.
+#. %s expands to www.bleachbit.org or similar
+#: ../bleachbit/GuiBasic.py
+#, python-format
+msgid "Open web browser to %s?"
+msgstr "用網頁瀏覽器開啟 %s？"
+
+#. TRANSLATORS: Title of a confirmation dialog.
+#. TRANSLATORS: Title of confirmation dialog for deleting orphaned wipe files.
+#: ../bleachbit/GuiBasic.py ../bleachbit/GuiWindow.py
+msgid "Confirm"
+msgstr "確認"
+
+#. TRANSLATORS: Instruction label in the manage cookies dialog.
+#: ../bleachbit/GuiCookie.py
+msgid "Select the cookies to keep when cleaning cookies across browsers."
+msgstr "選擇清理瀏覽器痕跡時要保留的 Cookie。"
+
+#. TRANSLATORS: This is a notice in the cookie manager about supported
+#. cookie types. The hyperlink points to the documentation website.
+#. Cookies refer to standard HTTP cookies.
+#. Site data includes LocalStorage, IndexedDB, and other website storage.
+#: ../bleachbit/GuiCookie.py
+#, python-brace-format
+msgid ""
+"Only cookies are preserved. Site data is always deleted. <a "
+"href='{url}'>Learn more</a>"
+msgstr "只會保留 Cookie。網站資料將會被刪除。<a href='{url}'>了解更多</a>"
+
+#. TRANSLATORS: Label for the search entry in the manage cookies dialog.
+#: ../bleachbit/GuiCookie.py
+msgid "Search:"
+msgstr "搜索："
+
+#. TRANSLATORS: Placeholder text in the search entry in the manage cookies dialog.
+#. 'Filter' is a verb meaning to narrow down the list by typing.
+#: ../bleachbit/GuiCookie.py
+msgid "Filter cookies..."
+msgstr "篩選 Cookie..."
+
+#. TRANSLATORS: Toggle button label in the manage cookies dialog.
+#. "Show" is a command (imperative).
+#. 'Selected' refers to selected cookies (the noun "cookies" is implied).
+#: ../bleachbit/GuiCookie.py
+msgid "Show Selected"
+msgstr "顯示已選中"
+
+#. TRANSLATORS: Tooltip for the "Show Selected" toggle button.
+#: ../bleachbit/GuiCookie.py
+msgid "Only show cookies that are currently selected"
+msgstr "只顯示目前選中的 Cookie"
+
+#. TRANSLATORS: Column header in the manage cookies dialog.
+#. 'Host' is a noun meaning the website hostname (domain name) of the cookie.
+#: ../bleachbit/GuiCookie.py
+msgid "Host"
+msgstr "主機"
+
+#. TRANSLATORS: Button label in the manage cookies dialog.
+#: ../bleachbit/GuiCookie.py
+msgid "Select All"
+msgstr "全選"
+
+#. TRANSLATORS: Button label in the manage cookies dialog.
+#: ../bleachbit/GuiCookie.py
+msgid "Deselect All"
+msgstr "全不選"
+
+#. TRANSLATORS: Status message shown while the cookie list is loading
+#. in the cookie manager dialog window.
+#. "Loading" is a present participle (ongoing action).
+#. To indicate an ongoing operation, include the ellipsis as literal
+#. Unicode (…) or as Unicode escape (\u2026).
+#: ../bleachbit/GuiCookie.py
+msgid "Loading cookies…"
+msgstr "正在載入 Cookie…"
+
+#: ../bleachbit/GuiPreferences.py
+msgid ""
+"Expert mode enables advanced features and relaxes guardrails. Use extra "
+"caution in expert mode."
+msgstr "專家模式啟用高級功能並放鬆限制。使用此模式時請格外小心。"
+
+#. TRANSLATORS: Used both as (1) a checkbox label in the preferences dialog
+#. to bypass some safety guardails for advanced users and (2) the title of
+#. dialog asking to confirm this choice.
+#: ../bleachbit/GuiPreferences.py
+msgid "Expert mode"
+msgstr "專家模式"
+
+#. TRANSLATORS: Notice shown in an infobar after changing a preference
+#. that requires starting the application to be effective.
+#: ../bleachbit/GuiPreferences.py
+msgid "Restart PurgeBit for full effect."
+msgstr "重啟 PurgeBit 以完全生效。"
+
+#. TRANSLATORS: Title for the preferences dialog
+#. TRANSLATORS: This menu item opens a dialog where the user can
+#. configure application settings.
+#: ../bleachbit/GuiPreferences.py ../share/app-menu.ui
+msgid "Preferences"
+msgstr "偏好設定"
+
+#. TRANSLATORS: Sidebar label for the general settings page of the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "General"
+msgstr "常規"
+
+#. TRANSLATORS: Sidebar label for the "Languages" page in the Preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Languages"
+msgstr "語言"
+
+#. TRANSLATORS: Sidebar label for the "keep list" (whitelist) page of
+#. the preferences dialog. This page lists paths that will be preserved
+#. (not deleted) during cleaning.
+#: ../bleachbit/GuiPreferences.py
+msgid "Keep list"
+msgstr "保留清單"
+
+#. TRANSLATORS: Sidebar label for the drives page of the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Drives"
+msgstr "硬碟"
+
+#. TRANSLATORS: Notice shown in an infobar when toggling
+#. dark mode on Linux.
+#: ../bleachbit/GuiPreferences.py
+msgid "Some GTK themes do not support both light and dark modes."
+msgstr "一些 GTK 主題不同時支援淺色與深色模式。"
+
+#. TRANSLATORS: Success message shown in the infobar.
+#: ../bleachbit/GuiPreferences.py
+msgid "Warning confirmations reset."
+msgstr "重置警告確認。"
+
+#. TRANSLATORS: Tooltip for the online updates checkbox in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid ""
+"If an update is found, you will be given the option to view information "
+"about it.  Then, you may manually download and install the update."
+msgstr "若有更新可用，將提供選項以檢視相關資訊。之後您可以手動下載並安裝更新。"
+
+#. TRANSLATORS: Checkbox label in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Check for new beta releases"
+msgstr "檢查新的 beta 版本"
+
+#. TRANSLATORS: Checkbutton label in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Auto-detect language"
+msgstr "自動偵測語言"
+
+#. TRANSLATORS: Tooltip explaining the auto-detect language option.
+#: ../bleachbit/GuiPreferences.py
+msgid "Automatically detect the system language"
+msgstr "自動偵測系統語言"
+
+#. TRANSLATORS: Label for the language selection dropdown.
+#: ../bleachbit/GuiPreferences.py
+msgid "Language:"
+msgstr "語言："
+
+#. TRANSLATORS: Checkbox label in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Overwrite contents of files to prevent recovery"
+msgstr "覆寫檔案內容以阻止資料恢復"
+
+#. TRANSLATORS: Tooltip for the shred checkbox in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid ""
+"Overwriting is ineffective on some file systems and with certain PurgeBit "
+"operations.  Overwriting is significantly slower."
+msgstr ""
+"覆寫操作在某些檔案系統與 PurgeBit 操作下將不起作用；執行覆寫會非常慢。"
+
+#. TRANSLATORS: Checkbox label in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Exit after cleaning"
+msgstr "清理後退出"
+
+#. TRANSLATORS: Button label in the preferences. 'Reset' is a verb.
+#: ../bleachbit/GuiPreferences.py
+msgid "Reset warning confirmations"
+msgstr "重置警告確認"
+
+#. TRANSLATORS: This means to hide cleaners which would do
+#. nothing. For example, if Firefox were never used on
+#. this system, this option would hide Firefox to simplify
+#. the list of cleaners.
+#: ../bleachbit/GuiPreferences.py
+msgid "Hide irrelevant cleaners"
+msgstr "隱藏無關的清理器"
+
+#. TRANSLATORS: Checkbox label in the preferences.
+#: ../bleachbit/GuiPreferences.py
+msgid "Use IEC sizes (1 KiB = 1024 bytes) instead of SI (1 kB = 1000 bytes)"
+msgstr ""
+"計量乘數使用 IEC 標準 (1 KiB = 1024 bytes) 而非國際單位制 (1 kB = 1000 bytes)"
+
+#. TRANSLATORS: Section title (noun) on the Preferences - General page
+#. for options related to cleaning stored data.
+#: ../bleachbit/GuiPreferences.py
+msgid "Cleaning"
+msgstr "清理"
+
+#. TRANSLATORS: Section title in Preferences for user interface options
+#. such as dark mode and window behavior.
+#: ../bleachbit/GuiPreferences.py
+msgid "Interface"
+msgstr "介面"
+
+#. TRANSLATORS: Checkbox label to remember the window size and position
+#. between application launches.
+#: ../bleachbit/GuiPreferences.py
+msgid "Remember window geometry"
+msgstr "記住視窗座標"
+
+#. TRANSLATORS: Checkbox label to enable dark mode in the UI.
+#: ../bleachbit/GuiPreferences.py
+msgid "Dark mode"
+msgstr "深色模式"
+
+#. TRANSLATORS: Checkbox label to use the Windows 10-style visual theme
+#. for the application interface.
+#: ../bleachbit/GuiPreferences.py
+msgid "Windows 10 theme"
+msgstr "Windows 10 主題"
+
+#. TRANSLATORS: Checkbox label to use the Fontconfig text rendering backend
+#. instead of the default Windows renderer. The option may improve blurry text.
+#. Fontconfig, which is software, is a proper noun.
+#: ../bleachbit/GuiPreferences.py
+msgid "Use Fontconfig text rendering backend"
+msgstr "使用 Fontconfig 文字渲染後端"
+
+#. TRANSLATORS: Tooltip for the fontconfig text rendering checkbox in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "May fix blurry or unreadable text. Requires restart."
+msgstr "可能修復模糊或無法讀取的文字。需要重啟。"
+
+#. TRANSLATORS: Section title on the preferences general page,
+#. labelling options for OS integration and advanced/developer features.
+#: ../bleachbit/GuiPreferences.py
+msgid "Integration and advanced"
+msgstr "整合與進階項"
+
+#. TRANSLATORS: Checkbox label in the preferences dialog.
+#. 'Shred' means securely delete a file to prevent data recovery.
+#. 'Context menu' is the menu shown on right-click.
+#. 'KDE Plasma' is a Linux desktop environment (proper noun, do not translate).
+#: ../bleachbit/GuiPreferences.py
+msgid "Add the shred context menu to KDE Plasma"
+msgstr "將「粉碎」選項新增至 KDE Plasma 的右鍵選單"
+
+#. TRANSLATORS: Checkbox label to show diagnostic log messages for
+#. troubleshooting.
+#: ../bleachbit/GuiPreferences.py
+msgid "Show debug messages"
+msgstr "顯示除錯訊息"
+
+#. TRANSLATORS: 'empty' means 'unallocated'.
+#. The user should decide which drives to wipe. Then, for each
+#. chosen drive, the user should specify one folder per drive.
+#. For example, to wipe C:\, the user may choose %TEMP% which
+#. is a folder anywhere on C:.
+#: ../bleachbit/GuiPreferences.py
+msgid "Choose a writable folder for each drive for which to wipe empty space."
+msgstr "為每個要擦除未分配空間的裝置選擇一個可寫資料夾。"
+
+#. TRANSLATORS: In the preferences dialog, this button adds a path to
+#. the list of paths
+#: ../bleachbit/GuiPreferences.py
+msgctxt "button"
+msgid "Add"
+msgstr "添加"
+
+#. TRANSLATORS: In the preferences dialog, this button removes a path
+#. from the list of paths
+#: ../bleachbit/GuiPreferences.py
+msgctxt "button"
+msgid "Remove"
+msgstr "移除"
+
+#. TRANSLATORS: Section title on the preferences languages page.
+#: ../bleachbit/GuiPreferences.py
+msgid "PurgeBit interface language"
+msgstr "PurgeBit 介面語言"
+
+#. TRANSLATORS: Section title on the preferences languages page.
+#: ../bleachbit/GuiPreferences.py
+msgid "Language files to keep when cleaning applications"
+msgstr "清理應用時要保留的語言檔"
+
+#. TRANSLATORS: Column header in the languages treeview.
+#. This column controls whether to keep the language.
+#: ../bleachbit/GuiPreferences.py
+msgid "Keep"
+msgstr "保留"
+
+#. TRANSLATORS: Column header in the languages treeview showing the
+#. language code (e.g., 'en_US').
+#: ../bleachbit/GuiPreferences.py
+msgid "Code"
+msgstr "代碼"
+
+#. TRANSLATORS: Column header in the languages treeview showing the
+#. native name of the language.
+#. TRANSLATORS: Column header for the cleaner name.
+#. Used in the tree view on the main screen.
+#. 'Name' is a noun.
+#: ../bleachbit/GuiPreferences.py ../bleachbit/GuiTreeModels.py
+msgid "Name"
+msgstr "名稱"
+
+#. TRANSLATORS: Error message shown in the infobar.
+#: ../bleachbit/GuiPreferences.py
+msgid "This path already exists in the keep list."
+msgstr "此路徑已在保留名單內。"
+
+#. TRANSLATORS: Error message shown in the infobar.
+#: ../bleachbit/GuiPreferences.py
+msgid "This path already exists in the custom list."
+msgstr "此路徑已在自定義清單內。"
+
+#. TRANSLATORS: Error message shown in the infobar.
+#: ../bleachbit/GuiPreferences.py
+msgid "This path is protected. To bypass protection, enable expert mode."
+msgstr "此路徑受保護。要繞過保護，請打開專家模式。"
+
+#. TRANSLATORS: Title of warning dialog shown when adding a protected path.
+#: ../bleachbit/GuiPreferences.py
+msgid "Protected Path"
+msgstr "受保護路徑"
+
+#. TRANSLATORS: Noun used as a column header in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "File"
+msgstr "檔案"
+
+#. TRANSLATORS: Noun used as a column header in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Folder"
+msgstr "資料夾"
+
+#. TRANSLATORS: %s is a file or folder path that was just added
+#: ../bleachbit/GuiPreferences.py
+#, python-format
+msgid "Added: %s"
+msgstr "已添加：%s"
+
+#. TRANSLATORS: %s is a file or folder path that was just removed
+#: ../bleachbit/GuiPreferences.py
+#, python-format
+msgid "Removed: %s"
+msgstr "已刪除：%s"
+
+#. TRANSLATORS: Notice label at the top of the keeplist (whitelist)
+#. page in the preferences dialog.
+#. "Paths" is used generically to refer to both files and folders.
+#: ../bleachbit/GuiPreferences.py
+msgid "These paths will not be deleted or modified."
+msgstr "以下路徑將不會被刪除或更改。"
+
+#. TRANSLATORS: Notice label at the top of the custom (delete)
+#. page in the preferences dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "These locations can be selected for deletion."
+msgstr "以下位置可選擇是否刪除。"
+
+#. TRANSLATORS: Column header in the preferences dialog showing whether
+#. the item is a file or folder.
+#: ../bleachbit/GuiPreferences.py
+msgid "Type"
+msgstr "類別"
+
+#. TRANSLATORS: In the tree view "Path" is used generically to refer to a
+#. file, a folder, or a pattern describing either
+#: ../bleachbit/GuiPreferences.py
+msgid "Path"
+msgstr "路徑"
+
+#. TRANSLATORS: Title of a file chooser dialog.
+#: ../bleachbit/GuiPreferences.py
+msgid "Choose a file"
+msgstr "選擇一個檔案"
+
+#. TRANSLATORS: Button label in the preferences for adding a file.
+#: ../bleachbit/GuiPreferences.py
+msgctxt "button"
+msgid "Add file"
+msgstr "添加檔案"
+
+#. TRANSLATORS: Button label in the preferences for adding a folder.
+#: ../bleachbit/GuiPreferences.py
+msgctxt "button"
+msgid "Add folder"
+msgstr "添加資料夾"
+
+#. TRANSLATORS: "Expert Mode" is the name of a feature/setting found in
+#. Preferences. Keep it consistent with the translation of "Expert Mode"
+#. in the preferences dialog. This message appears when cleaning options
+#. with warnings are selected but expert mode is disabled.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"One or more selected cleaning options have warnings and require Expert Mode "
+"to clean. Enable it in preferences."
+msgstr "一或多個選中的清理選項有警告，需要專家模式。可在偏好設定中啟用它。"
+
+#. TRANSLATORS: "Expert Mode" is the name of a feature/setting found in
+#. Preferences. Keep it consistent with the translation of "Expert Mode"
+#. in the preferences dialog. This message appears when the user tries to
+#. skip a delete confirmation without enabling Expert Mode.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"Delete confirmation is disabled but expert mode is not enabled. Enable "
+"Expert Mode in preferences to skip delete confirmations."
+msgstr "禁用了刪除確認但專家模式未開啟。在偏好設定中啟用專家模式跳過刪除確認。"
+
+#. TRANSLATORS: First-start hint for Linux users shown in
+#. the log on the main screen.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"Access the application menu by clicking the hamburger icon on the title bar."
+msgstr "點擊標題欄的漢堡圖示可存取應用程式選單。"
+
+#. TRANSLATORS: First-start hint for Windows users shown in
+#. the log on the main screen.
+#: ../bleachbit/GuiStartup.py
+msgid "Access the application menu by clicking the logo on the title bar."
+msgstr "點擊標題欄的圖標可存取應用程式選單。"
+
+#. TRANSLATORS: Warning shown on startup when running BleachBit as root on Linux.
+#. It means, for example, that cleaning a browser will clean root's browser data.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"You are running PurgeBit with administrative privileges for cleaning shared "
+"parts of the system, and references to the user profile folder will clean "
+"only the root account."
+msgstr ""
+"您正以管理員權限執行 PurgeBit，程式將清理系統的共享部分。與使用者設定相關的"
+"清理將只針對 root 帳號進行。"
+
+#. TRANSLATORS: Warning shown on startup on Windows.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"Run PurgeBit with administrator privileges to improve the accuracy of "
+"overwriting the contents of files."
+msgstr "以管理員權限執行 PurgeBit，提高覆寫檔案內容的準度。"
+
+#. TRANSLATORS: Warning shown on startup on Windows when elevated
+#. with different account. It means, for example, that cleaning a
+#. browser will clean the browser data of the administrator account.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"You elevated privileges using a different account to clean shared parts of "
+"the system. User-specific paths will refer to the administrator account, so "
+"to clean your profile, run PurgeBit again as a standard user."
+msgstr ""
+"您使用其他帳戶提升權限來清理系統的共享部分。用戶指定的路徑將指向管理員帳戶，"
+"因此若要清理您的用戶配置，請以標準用戶身份再次執行 PurgeBit。"
+
+#. TRANSLATORS: Warning shown on startup on Windows when running
+#. unofficial Microsoft Store version. Advises user to get genuine
+#. version from official website.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"There is no official version of PurgeBit on the Microsoft Store. Get the "
+"genuine version at https://www.bleachbit.org where it is always free of "
+"charge."
+msgstr ""
+"Microsoft 商店上沒有官方版本的 PurgeBit。 要獲取貨真價實的版本，請訪問 "
+"https://www.bleachbit.org 。 本程式始終免費。"
+
+#. TRANSLATORS: Startup warning on macOS when the application
+#. lacks Full Disk Access. "Full Disk Access", "System
+#. Settings", and "Privacy & Security" are names of macOS
+#. features and settings: match Apple's localization.
+#: ../bleachbit/GuiStartup.py
+msgid ""
+"PurgeBit may not have Full Disk Access. Without it, macOS blocks access to "
+"some files, and some cleaners will not work.\n"
+"\n"
+"To fix this, open System Settings > Privacy & Security > Full Disk Access, "
+"turn on PurgeBit, and then restart PurgeBit."
+msgstr ""
+"PurgeBit 或許缺少完整的磁碟訪問權限。沒有它，macOS 會封鎖對部分檔案的存取，"
+"有些清理器將無法運作。\n"
+"\n"
+"如何修正：打開「系統設定」>「隱私權與安全性」>「完全取用磁碟」，將 PurgeBit "
+"標記開啟，之後重新啟動 PurgeBit。"
+
+#. TRANSLATORS: Column header indicating whether the cleaner is active/enabled.
+#. Used in the tree view on the main screen.
+#: ../bleachbit/GuiTreeModels.py
+msgid "Active"
+msgstr "啟用"
+
+#. TRANSLATORS: Column header for the size of the cleaner.
+#. Used in the tree view on the main screen.
+#. 'Size' is a noun and refers to the amount of space that the cleaner
+#. would clean (preview mode) or did clean (cleaning mode).
+#: ../bleachbit/GuiTreeModels.py
+msgid "Size"
+msgstr "大小"
+
+#. TRANSLATORS: Warning shown in the infobar.
+#: ../bleachbit/GuiTreeModels.py
+msgid "This option is protected. To bypass protection, enable expert mode."
+msgstr "此選項受保護。要繞過保護，請打開專家模式。"
+
+#. TRANSLATORS: %(cleaner) may be Firefox, System, etc.
+#. %(option) may be cache, logs, cookies, etc.
+#: ../bleachbit/GuiTreeModels.py
+#, python-format
+msgid "%(cleaner)s - %(option)s"
+msgstr "%(cleaner)s - %(option)s"
+
+#. TRANSLATORS: Button label on the headerbar and context menu item
+#. in the treeview.
+#. 'Preview' is a verb.
+#: ../bleachbit/GuiWindow.py
+msgid "Preview"
+msgstr "預覽"
+
+#. TRANSLATORS: Button label on the headerbar and context menu item
+#. in the treeview.
+#. 'Clean' is a verb.
+#: ../bleachbit/GuiWindow.py
+msgid "Clean"
+msgstr "清理"
+
+#. TRANSLATORS: Button in tree view's context menu to open the cookie
+#. manager.
+#. Preserve the ellipsis as literal Unicode (…) or as Unicode escape (\u2026).
+#: ../bleachbit/GuiWindow.py
+msgid "Manage cookies to keep…"
+msgstr "管理要保留的 Cookie…"
+
+#. TRANSLATORS: Error message shown in the log on the main window.
+#. %s is the file path.
+#: ../bleachbit/GuiWindow.py
+#, python-format
+msgid "Resetting the configuration file because it is corrupt: %s"
+msgstr "重設損壞的設置檔：%s"
+
+#. TRANSLATORS: Error message shown when a cleaner option
+#. cannot be used because expert mode is disabled.
+#. %(cleaner)s is the cleaner name, %(option)s is the option name.
+#: ../bleachbit/GuiWindow.py
+#, python-format
+msgid ""
+"%(cleaner)s - %(option)s cannot be cleaned because expert mode is disabled."
+msgstr "%(cleaner)s - %(option)s 無法被清理，因為禁用了專家模式。"
+
+#. TRANSLATORS: Error message shown in the infobar when the user clicks
+#. the preview or clean button without selecting any cleaner options.
+#: ../bleachbit/GuiWindow.py
+msgid "You must select an operation"
+msgstr "您必須選擇一項操作"
+
+#. TRANSLATORS: Status message shown on the progress bar and in a popup
+#. notification.
+#: ../bleachbit/GuiWindow.py
+msgid "Done."
+msgstr "完成。"
+
+#. TRANSLATORS: Context menu item in the tree view that opens the preferences dialog.
+#. Preserve the ellipsis as literal Unicode (…) or as Unicode escape (\u2026).
+#: ../bleachbit/GuiWindow.py
+msgid "Manage custom paths…"
+msgstr "管理自定義路徑…"
+
+#. TRANSLATORS: Tooltip for the preview button on the headerbar.
+#. 'Preview' is a verb, and 'selected operations' refers to
+#. the cleaning options (e.g., Firefox - Cache).
+#: ../bleachbit/GuiWindow.py
+msgid "Preview files in the selected operations (without deleting any files)"
+msgstr "預覽所選操作的目標檔案（不會刪除任何檔案）"
+
+#. TRANSLATORS: Tooltip for the clean button on the headerbar.
+#. 'Clean' is a verb, and 'operations' are cleaning options (e.g.,
+#. Firefox - Cache).
+#: ../bleachbit/GuiWindow.py
+msgid "Clean files in the selected operations"
+msgstr "根據所選操作清理檔案"
+
+#. TRANSLATORS: Tooltip for the abort button on the headerbar,
+#. and 'abort' ia a verb.
+#: ../bleachbit/GuiWindow.py
+msgid "Abort the preview or cleaning process"
+msgstr "中止清理程序預覽"
+
+#. TRANSLATORS: Hint shown when starting in fullscreen mode.
+#: ../bleachbit/GuiWindow.py
+msgid "Press F11 to exit fullscreen mode."
+msgstr "按下 F11 離開全螢幕模式。"
+
+#. TRANSLATORS: This message is shown when orphaned temporary files
+#. from an interrupted disk wipe operation are detected.
+#: ../bleachbit/GuiWindow.py
+msgid ""
+"PurgeBit detected leftover files from an interrupted disk wipe operation. "
+"Would you like to preview them with an option to delete them?"
+msgstr ""
+"PurgeBit 偵測到因磁碟擦除作業被中斷所遺留的檔案。您想預覽這些檔案並選擇是否"
+"刪除它們嗎？"
+
+#: ../bleachbit/Memory.py
+msgid ""
+"The command 'swapon -s' failed, so falling back to /proc/swaps for swap "
+"information."
+msgstr "指令「swapon -s」執行失敗，改從 /proc/swaps 獲取 swap 空間資訊。"
+
+#: ../bleachbit/Memory.py
+msgid "Disabling swap."
+msgstr "停用 swap 交換空間。"
+
+#: ../bleachbit/Memory.py
+msgid "Re-enabling swap."
+msgstr "重啟 swap 交換空間。"
+
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Setting nice value %d for this process."
+msgstr "設定本程序的 nice 值為 %d。"
+
+#. TRANSLATORS: Debug message when a process gives up root/admin privileges.
+#. %(pid)d is the integer process ID; %(uid)d is the integer user ID to switch to.
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Dropping privileges of process ID %(pid)d to user ID %(uid)d."
+msgstr "降低程序 ID %(pid)d 的權限至使用者 ID %(uid)d。"
+
+#. TRANSLATORS: The variable is a quantity like 5kB
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Allocating and wiping %s of memory."
+msgstr "分配並抹寫 %s 記憶體。"
+
+#. TRANSLATORS: The variable is a quantity like 5kB
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Freeing %s of memory."
+msgstr "釋放 %s 記憶體。"
+
+#. TRANSLATORS: This is a debugging message that the parent process
+#. is waiting for the child process. %(parent_pid)d is the parent
+#. process ID; %(child_pid)d is the child process ID.
+#: ../bleachbit/Memory.py
+#, python-format
+msgid ""
+"The function wipe_memory() with process ID %(parent_pid)d is waiting for "
+"child process ID %(child_pid)d."
+msgstr ""
+"程序 ID %(parent_pid)d 的函式 wipe_memory() 正在等待子程序 ID %(child_pid)d "
+"退出。"
+
+#. TRANSLATORS: Debug message. 'Found' is a past tense verb (short for
+#. "Found [that] the UUID for swap device ..."). %(device)s is the device
+#. path (e.g., /dev/sda5); %(uuid)s is a UUID string
+#. (e.g., ee0e85f6-6e5c-42b9-902f-776531938bbf). Do not translate variables.
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Found UUID for swap device %(device)s is %(uuid)s."
+msgstr "找到 swap 裝置 %(device)s 的 UUID 為 %(uuid)s。"
+
+#. TRANSLATORS: The variable is a quantity like 5kB
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Physical free memory is %s."
+msgstr "可用的實體記憶體為 %s。"
+
+#. TRANSLATORS: The variable is a device like /dev/sda2
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Wiping the swap device %s."
+msgstr "抺寫 swap 交換裝置 %s。"
+
+#. TRANSLATORS: The variable is a device like /dev/sda2
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Reinitializing the swap device %s."
+msgstr "重新初始化 swap 交換裝置 %s。"
+
+#. TRANSLATORS: The variable is a device like /dev/sda2
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "Detected these swap devices: %s"
+msgstr "偵測到以下 swap 交換裝置：%s"
+
+#: ../bleachbit/Memory.py
+#, python-format
+msgid "The child memory-wiping process returned code %d."
+msgstr "抹寫記憶體的子程序回傳了退出代碼 %d。"
+
+#: ../bleachbit/Network.py
+#, python-format
+msgid "Downloading URL failed: %s"
+msgstr "下載 URL 失敗：%s"
+
+#: ../bleachbit/Options.py
+#, python-format
+msgid "Disk was full when writing configuration to file: %s"
+msgstr "磁碟空間已滿，無法將設置寫入檔案：%s"
+
+#: ../bleachbit/Options.py
+#, python-format
+msgid "Permission denied when writing configuration to file: %s"
+msgstr "權限被拒絕，無法將設置寫入檔案：%s"
+
+#: ../bleachbit/Options.py
+#, python-format
+msgid "Error checking whether path exists: %s"
+msgstr "路徑檢查錯誤：%s"
+
+#. TRANSLATORS: %s is a ISO language code of two or three letters.
+#. "Preserving" means the language's localization files will be
+#. kept and not deleted when cleaning.
+#: ../bleachbit/Options.py
+#, python-format
+msgid "Automatically preserving language %s."
+msgstr "自動保留語言 %s。"
+
+#: ../bleachbit/Options.py
+msgid "Error when setting the default drives to shred."
+msgstr "設定預設粉碎裝置時發生錯誤。"
+
+#. TRANSLATORS: Warning shown when user tries to add a protected path.
+#. %(path)s is the path, %(files)d is number of files, %(size)s is human-readable size
+#. Do not translate the placeholders.
+#. Adapt quotation marks around the path placeholder to the typographic conventions of
+#. your language.
+#: ../bleachbit/ProtectedPath.py
+#, python-format
+msgid ""
+"Warning: '%(path)s' may contain important files.\n"
+"\n"
+"Impact: %(files)d file(s), %(size)s\n"
+"\n"
+"Are you sure you want to add this path?"
+msgstr ""
+"警告：'%(path)s' 可能包含重要檔案。\n"
+"\n"
+"影響：%(files)d 個檔案，%(size)s\n"
+"\n"
+"確定要添加此路徑嗎？"
+
+#. TRANSLATORS: Warning shown when user tries to add a protected path (no files found).
+#. Do not translate the placeholder %(path)s.
+#. Adapt quotation marks around the path placeholder to the typographic conventions of
+#. your language.
+#: ../bleachbit/ProtectedPath.py
+#, python-format
+msgid ""
+"Warning: '%(path)s' may contain important files.\n"
+"\n"
+"Are you sure you want to add this path?"
+msgstr ""
+"警告：'%(path)s' 可能包含重要檔案。\n"
+"\n"
+"確定要添加此路徑嗎？"
+
+#: ../bleachbit/RecognizeCleanerML.py
+msgid "Security warning"
+msgstr "安全警告"
+
+#: ../bleachbit/RecognizeCleanerML.py
+msgid ""
+"These cleaner definitions are new or have changed. Malicious definitions can "
+"damage your system. If you do not trust these changes, delete the files or "
+"quit."
+msgstr ""
+"以下是新增與變更過的清理器定義。惡意定義可能會損壞您的系統。若您不信任這些更"
+"動，刪除這些檔案或退出。"
+
+#: ../bleachbit/RecognizeCleanerML.py
+msgctxt "column_label"
+msgid "Delete"
+msgstr "刪除"
+
+#: ../bleachbit/RecognizeCleanerML.py
+msgctxt "column_label"
+msgid "Filename"
+msgstr "檔名"
+
+#: ../bleachbit/Unix.py
+#, python-format
+msgid "Executable not found: %s"
+msgstr "未找到可執行檔：%s"
+
+#. TRANSLATORS: %s expands to a name such as 'Firefox' or 'System'.
+#: ../bleachbit/Unix.py ../bleachbit/Worker.py
+#, python-format
+msgid ""
+"%s cannot be cleaned because it is currently running.  Close it, and try "
+"again."
+msgstr "無法清理 %s，因為它正在執行。將它關閉後再試一遍。"
+
+#. TRANSLATORS: This is cleaner name for cleaners imported from winapp2.ini
+#: ../bleachbit/Winapp.py
+msgid "Applications"
+msgstr "應用程式"
+
+#. TRANSLATORS: This is cleaner name for cleaners imported from winapp2.ini
+#: ../bleachbit/Winapp.py
+msgid "Internet"
+msgstr "網際網路"
+
+#. TRANSLATORS: This is cleaner name for cleaners imported from winapp2.ini
+#: ../bleachbit/Winapp.py
+msgid "Multimedia"
+msgstr "多媒體"
+
+#. TRANSLATORS: This is cleaner name for cleaners imported from winapp2.ini
+#: ../bleachbit/Winapp.py
+msgid "Utilities"
+msgstr "實用工具"
+
+#. TRANSLATORS: Cleaner category name for games imported from winapp2.ini.
+#: ../bleachbit/Winapp.py
+msgid "Games"
+msgstr "遊戲"
+
+#. TRANSLATORS: Description shown for a cleaner imported from winapp2.ini,
+#. which is a database of cleaning definitions.
+#: ../bleachbit/Winapp.py
+msgid "Imported from winapp2.ini"
+msgstr "從 winapp2.ini 匯入"
+
+#. TRANSLATORS: Warning shown when cleaning Windows Updates without administrator access.
+#: ../bleachbit/Windows.py
+msgid "Administrator privileges are required to clean Windows Updates"
+msgstr "需要管理員權限以清除 Windows Update 檔案"
+
+#. TRANSLATORS: Message in log file when stopping a Windows service.
+#. The placeholder is the code name of the service.
+#: ../bleachbit/Windows.py
+#, python-format
+msgid "stop Windows service %(service)s"
+msgstr "停止 Windows 服務 %(service)s"
+
+#. TRANSLATORS: Message in log file when starting a Windows service.
+#. The placeholder is the code name of the service.
+#: ../bleachbit/Windows.py
+#, python-format
+msgid "start Windows service %(service)s"
+msgstr "啟動 Windows 服務 %(service)s"
+
+#: ../bleachbit/Wipe.py
+msgid ""
+"There was at least one file on a file system that does not support advanced "
+"overwriting."
+msgstr "至少一份檔案所在的檔案系統不支援進階覆寫。"
+
+#. TRANSLATORS: Debug log message shown during file wiping. 'Wiping' is a
+#. present participle (ongoing action) refering to secure overwrite.
+#. %(pathname)s is the file/directory path; %(fstype)s is the file system type
+#. (e.g., ext3, ntfs). Do not translate placeholders.
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid "Wiping path %(pathname)s with file system type %(fstype)s"
+msgstr "擦除檔案系統類型為 %(fstype)s 的路徑 %(pathname)s"
+
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid "Path to wipe must be an existing directory: %s"
+msgstr "要擦除的路徑必須是一個存在的目錄：%s"
+
+#. TRANSLATORS: Warning in the log. BleachBit wipes free space by
+#. creating temporary files in the chosen folder. This folder can be
+#. changed by any user on the computer, so another user could tamper
+#. with those files. %s is the folder path.
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid ""
+"Wiping free space here is unsafe because any user can change this folder: %s"
+msgstr "在這裡擦除未分配區域並不安全，因為任何使用者都能更改這個資料夾：%s"
+
+#. TRANSLATORS: Status message while wiping a drive's empty space.
+#: ../bleachbit/Wipe.py
+msgid "Creating new, temporary file for wiping empty space."
+msgstr "建立新的暫存檔以抹寫剩餘空間。"
+
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid "Error #%d when flushing the file buffer."
+msgstr "排清檔案緩衝區時出現了錯誤 #%d。"
+
+#. TRANSLATORS: Debug message summarizing a write operation. All placeholders
+#. are numeric: %(file_count)d = integer number of files written;
+#. %(total_bytes)d = integer total bytes written; %(elapsed_sec)d = integer
+#. elapsed seconds; %(rate_mbs).2f = decimal megabytes per second (e.g., 3.14).
+#. Do not translate variables.
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid ""
+"Wrote %(file_count)d files and %(total_bytes)d bytes in %(elapsed_sec)d "
+"seconds at %(rate_mbs).2f MB/s"
+msgstr ""
+"已寫入 %(file_count)d 個檔案與 %(total_bytes)d 位元組，花費 %(elapsed_sec)d "
+"秒，速度 %(rate_mbs).2f MB/s"
+
+#. TRANSLATORS: Debug message showing disk space available to regular (non-root) users.
+#. %(bytes)d is an integer count of bytes free; %(inodes)d is an integer count of inodes free.
+#. Do not translate variables.
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid "%(bytes)d bytes and %(inodes)d inodes available to non-super-user"
+msgstr "非超級使用者可使用 %(bytes)d 位元組與 %(inodes)d 個 inode"
+
+#. TRANSLATORS: Debug message showing disk space available to the root (admin) user.
+#. %(bytes)d is an integer count of bytes free; %(inodes)d is an integer count of inodes free.
+#. Do not translate variables.
+#: ../bleachbit/Wipe.py
+#, python-format
+msgid "%(bytes)d bytes and %(inodes)d inodes available to super-user"
+msgstr "超級使用者可使用 %(bytes)d 位元組與 %(inodes)d 個 inode"
+
+#: ../bleachbit/Wipe.py
+msgid "Encountered unknown error #0 while truncating file."
+msgstr "截斷檔案時遇到了未知錯誤 #0 。"
+
+#. TRANSLATORS: This indicates an error.  The special keyword
+#. %(operation)s will be replaced by 'firefox' or 'opera' or
+#. some other cleaner ID.  The special keyword %(msg)s will be
+#. replaced by a message such as 'Permission denied.'
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Exception while running operation '%(operation)s': '%(msg)s'"
+msgstr "執行操作「%(operation)s」時發生例外：「%(msg)s」"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "File not found: %s"
+msgstr "未找到檔案：%s"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Access denied when flagging file for later delete: %s"
+msgstr "將檔案標記為稍後刪除時存取被拒：%s"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Access denied when deleting registry value: %s"
+msgstr "刪除註冊表值時存取被拒：%s"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Access denied when deleting registry key: %s"
+msgstr "刪除註冊表鍵時存取被拒：%s"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Access denied: %s"
+msgstr "存取被拒：%s"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Database is locked: %s"
+msgstr "資料庫被鎖定：%s"
+
+#: ../bleachbit/Worker.py
+#, python-brace-format
+msgid "Error: {operation_option}: {command}"
+msgstr "錯誤：{operation_option}: {command}"
+
+#. TRANSLATORS: 'empty' means 'unallocated'
+#: ../bleachbit/Worker.py
+msgid "Please wait. Wiping empty space."
+msgstr "請稍候。正在擦除硬碟未分配區域。"
+
+#. TRANSLATORS: Instruction shown while wiping a drive's empty space.
+#: ../bleachbit/Worker.py
+msgid "To stop this process, press the abort button on the toolbar and wait."
+msgstr "要停止此作業，按下工具欄上的終止按鈕並等待。"
+
+#: ../bleachbit/Worker.py
+msgid ""
+"If the application is force closed before the process is complete, large "
+"files may remain on the disk, and they may use all available space. To "
+"remove them, start PurgeBit again."
+msgstr ""
+"如果應用程序在作業完成前被強制關閉，磁碟可能將殘留大量檔案，佔用所有可用空"
+"間。要移除它們，請重啟 PurgeBit。"
+
+#. TRANSLATORS: %s is replaced with Firefox, System, etc.
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Please wait.  Cleaning %s."
+msgstr "請稍候。正在清理 %s。"
+
+#. TRANSLATORS: %d is the estimated number of minutes remaining.
+#: ../bleachbit/Worker.py
+#, no-python-format
+msgid "About %d minute remaining."
+msgid_plural "About %d minutes remaining."
+msgstr[0] "還剩約 %d 分鐘。"
+
+#. TRANSLATORS: This refers to disk space that was
+#. really recovered (in other words, not a preview)
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Disk space recovered: %s"
+msgstr "已釋放磁碟空間：%s"
+
+#. TRANSLATORS: This refers to a preview (no real
+#. changes were made yet)
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Disk space to be recovered: %s"
+msgstr "預計釋放磁碟空間：%s"
+
+#. TRANSLATORS: This refers to the number of files really
+#. deleted (in other words, not a preview).
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Files deleted: %d"
+msgstr "已刪除檔案：%d"
+
+#. TRANSLATORS: This refers to the number of files that
+#. would be deleted (in other words, simply a preview).
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Files to be deleted: %d"
+msgstr "預計刪除檔案：%d"
+
+#. TRANSLATORS: %d is the number of special cleaning operations
+#. completed. Special operations are cleaning actions that do
+#. not delete a file, such as overwriting a file's contents,
+#. truncating a file, or deleting a Windows registry key.
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Special operations: %d"
+msgstr "特殊操作：%d"
+
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Errors: %d"
+msgstr "錯誤：%d 項錯誤"
+
+#. TRANSLATORS: The "deep scan" feature searches over broad
+#. areas of the file system such as the user's whole home directory
+#. or all the system executables.
+#: ../bleachbit/Worker.py
+msgid "Please wait.  Running deep scan."
+msgstr "請稍候。正在進行深層掃描。"
+
+#. TRANSLATORS: %s is replaced with Firefox, System, etc.
+#: ../bleachbit/Worker.py
+#, python-format
+msgid "Please wait.  Previewing %s."
+msgstr "請稍候。正在預覽 %s。"
+
+#. TRANSLATORS: This menu item opens a file picker dialog where the
+#. user can select one or more files. The selected files are then
+#. securely deleted by overwriting their data before removal, making
+#. recovery impossible. "Shredding" refers to this secure deletion process.
+#: ../share/app-menu.ui
+msgid "_Shred Files"
+msgstr "粉碎檔案(_S)"
+
+#. TRANSLATORS: This menu item prompts the user to select one or
+#. more folders using a folder picker dialog. Then, it securely deletes
+#. the selected folder(s) and all their contents. "Shredding" means
+#. overwriting data before deletion to prevent recovery.
+#: ../share/app-menu.ui
+msgid "Sh_red Folders"
+msgstr "粉碎資料夾(_R)"
+
+#. TRANSLATORS: This menu item reads file or folder paths from the
+#. clipboard, then securely deletes them. "Shredding" means overwriting
+#. data before deletion to prevent recovery. The clipboard is cleared
+#. after the operation.
+#: ../share/app-menu.ui
+msgid "Shred Paths from Clipboard"
+msgstr "銷毀剪貼簿中的路徑"
+
+#. TRANSLATORS: This menu item prompts the user to select a folder.
+#. It then fills the partition with data until full, overwriting any
+#. recoverable traces of previously deleted files. "Empty space" refers
+#. to unallocated disk space where deleted file data may still exist.
+#: ../share/app-menu.ui
+msgid "_Wipe Empty Space"
+msgstr "擦除未分配空間(_W)"
+
+#. TRANSLATORS: This menu item creates decoy files filled with random
+#. data to mislead anyone searching for sensitive information. "Chaff" refers
+#. to material used as a distraction or decoy.
+#: ../share/app-menu.ui
+msgid "_Make Chaff"
+msgstr "製造干擾文件 (_M)"
+
+#. TRANSLATORS: This menu item securely deletes the application's
+#. configuration files (resetting all settings to defaults) and then
+#. closes the application. "Shredding" means overwriting data before
+#. deletion to prevent recovery.
+#: ../share/app-menu.ui
+msgid "S_hred Settings and Quit"
+msgstr "重置 PurgeBit 設定並退出程序(_H)"
+
+#. TRANSLATORS: This menu item displays technical details about
+#. the system, sometimes useful for troubleshooting issues.
+#: ../share/app-menu.ui
+msgid "S_ystem Information"
+msgstr "系統資訊(_Y)"
+
+#. TRANSLATORS: This menu item opens a web browser to a page
+#. with links to documentation and the bug tracker.
+#: ../share/app-menu.ui
+msgid "_Help"
+msgstr "幫助(_H)"
+
+#. TRANSLATORS: This menu item opens a dialog with general information
+#. about the application, including its name, version, description,
+#. copyright, license, and website link.
+#: ../share/app-menu.ui
+msgid "_About PurgeBit"
+msgstr "關於 PurgeBit (_A)"
+
+#~ msgid "A history of forms entered in websites and in the Search bar"
+#~ msgstr "網站表單與搜尋欄的輸入紀錄"
+
+#~ msgid "Delete the current and last sessions"
+#~ msgstr "刪除目前與過去所有作業階段"
+
+#~ msgctxt "nsis:MULTIUSER_INSTALLATION_FOR_CURRENT_USER_NOT_SUPPORTED"
+#~ msgid "The operating system doesn't support current user installations."
+#~ msgstr "作業系統不支持目前用戶安裝。"
+
+#~ msgctxt "nsis:SECTION_UNINSTALL_NAME"
+#~ msgid "Uninstall"
+#~ msgstr "卸載"
+
+#~ msgid "DOM Storage"
+#~ msgstr "DOM 存儲"
+
+#~ msgid "Delete HTML5 cookies"
+#~ msgstr "刪除 HTML5 Cookie"
+
+#~ msgid "Manage cookies to keep"
+#~ msgstr "管理要保留的 Cookie"
+
+#~ msgid "Keep Selected"
+#~ msgstr "保留所選"
+
+#~ msgid "All languages will be deleted except those checked."
+#~ msgstr "沒有勾選的語言將會被刪除。"
+
+#~ msgid "Starting…"
+#~ msgstr "正在啟動…"
+
+#~ msgid "Download data needed for chaff generator?"
+#~ msgstr "下載產生僞文件所需資料？"
+
+#~ msgid "Preserve"
+#~ msgstr "保留"
+
+#~ msgid "Manage cookies to keep..."
+#~ msgstr "管理要保留的 Cookie..."
+
+#~ msgid "Manage Cookies"
+#~ msgstr "管理 Cookie"
+
+#~ msgid "BleachBit is starting...\n"
+#~ msgstr "BleachBit 正在啟動...\n"
+
+#~ msgid "Loads the initial session after the browser closes or crashes"
+#~ msgstr "在瀏覽器關閉或崩潰後載入最初的瀏覽狀態"
+
+#, fuzzy, python-format
+#~| msgid "not a valid cleaner: %s"
+#~ msgid "not a valid cleaner: -%s"
+#~ msgstr "非有效清理器：%s"
+
+#~ msgid "This option is very slow."
+#~ msgstr "這個選項非常慢。"
+
+#, python-format
+#~ msgid "Overwrite free disk space %s"
+#~ msgstr "覆寫可用硬碟空間 %s"
+
+#~ msgid "Whitelist"
+#~ msgstr "白名單"
+
+#~ msgid "Error"
+#~ msgstr "錯誤"
+
+#~ msgid "Quit"
+#~ msgstr "退出"
+
+#~ msgid ""
+#~ "Wiping free disk space erases remnants of files that were deleted without "
+#~ "shredding. It does not free up space."
+#~ msgstr ""
+#~ "抹寫硬碟可用空間，將未徹底刪除的檔案殘餘清理乾淨。這個項目不會釋出額外空"
+#~ "間。"
+
+#~ msgid "Audio player"
+#~ msgstr "音樂播放器"
+
+#, python-format
+#~ msgid "Cleaner is not usable on this OS because it has no actions: %s"
+#~ msgstr "無法在此作業系統上使用清理器，因為沒有可用的動作：%s"
+
+#~ msgid "IRC client formerly known as XChat"
+#~ msgstr "IRC 客戶端，前身為 XChat"
+
+#, python-format
+#~ msgid "Wiping path: %s"
+#~ msgstr "抺寫路徑：%s"
+
+#~ msgid ""
+#~ "Error loading the SQLite module: the antivirus software may be blocking "
+#~ "it."
+#~ msgstr "載入 SQLite 模組時發生錯誤：可能被防毒軟體阻擋。"
+
+#~ msgid ""
+#~ "The file python3.dll was found in c:\\ or c:\\dlls, which indicates a "
+#~ "possible attempt at DLL search-order hijacking."
+#~ msgstr ""
+#~ "在 c:\\ 或 c:\\dlls 找到了 python3.dll，表明可能存在 DLL 搜尋順序挾持的嘗"
+#~ "試。"
+
+#~ msgid "Warning"
+#~ msgstr "警告"
+
+
+#: ../bleachbit/Language.py
+msgid "PurgeBit"
+msgstr "PurgeBit"
+
+
+#: ../bleachbit/GuiWindow.py
+msgid "Search cleaners"
+msgstr "搜尋清理項目"
+
+#. TRANSLATORS: Summary above the list of cleaners.  %(selected)s is
+#. the number of enabled cleaning options and %(total)s is the number
+#. of cleaning options currently listed.
+#: ../bleachbit/GuiWindow.py
+#, python-format
+msgid "%(selected)s of %(total)s items selected"
+msgstr "已選 %(selected)s 項 / 共 %(total)s 項"

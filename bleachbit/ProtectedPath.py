@@ -1,0 +1,306 @@
+# vim: ts=4:sw=4:expandtab
+
+# BleachBit
+# Copyright (C) 2008-2025 Andrew Ziem
+# https://www.bleachbit.org
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+The protected path warning system is a safety net
+
+This module loads protected path definitions from XML and checks whether
+user-specified paths match protected paths, warning users before they
+accidentally delete important system or application files.
+"""
+
+import logging
+import os
+
+import bleachbit
+from bleachbit import FileUtilities, FS_CASE_SENSITIVE
+from bleachbit.General import getText, os_match, reject_xml_dtd
+from bleachbit.Language import get_text as _
+from bleachbit.PathUtils import (
+    expand_path,
+    expand_path_entries,
+    normalize_path,
+    path_equal,
+    path_has_relative_suffix,
+    path_startswith,
+)
+
+logger = logging.getLogger(__name__)
+
+# Cache for loaded protected paths
+_protected_paths_cache = None
+
+
+def _get_protected_path_xml():
+    """Return the path to the protected_path.xml file."""
+    return bleachbit.get_share_path('protected_path.xml')
+
+
+def load_protected_paths(force_reload=False):
+    """Load protected path definitions from XML.
+
+    Returns a list of dictionaries with keys:
+        - path: The expanded, normalized path
+        - depth: How many levels deep to protect (0=exact, 1=children, etc.)
+        - case_sensitive: Whether matching should be case-sensitive
+
+    Args:
+        force_reload: If True, reload from XML even if cached
+    """
+    # The parsed XML is cached for the process.
+    # pylint: disable-next=global-statement
+    global _protected_paths_cache
+
+    if _protected_paths_cache is not None and not force_reload:
+        return _protected_paths_cache
+
+    xml_path = _get_protected_path_xml()
+    if xml_path is None:
+        logger.warning("Protected path XML file not found")
+        return []
+
+    protected_paths = []
+
+    # Keep minidom off the startup path: this is the only place it is needed.
+    import xml.dom.minidom  # pylint: disable=import-outside-toplevel
+
+    try:
+        with open(xml_path, 'rb') as f:
+            data = f.read()
+        reject_xml_dtd(data, 'protected_path.xml')
+        dom = xml.dom.minidom.parseString(data)
+    except Exception as e:
+        logger.error("Error parsing protected path XML: %s", e)
+        return []
+
+    for paths_node in dom.getElementsByTagName('paths'):
+        # Check OS match for this <paths> group
+        os_attr = paths_node.getAttribute('os') or ''
+        if not os_match(os_attr):
+            continue
+
+        for path_node in paths_node.getElementsByTagName('path'):
+            # Get path attributes (inherit from parent <paths> when omitted)
+            depth_attr = (path_node.getAttribute('depth') or
+                          paths_node.getAttribute('depth') or '0')
+            if depth_attr == 'any':
+                depth = None
+            else:
+                try:
+                    depth = int(depth_attr)
+                except ValueError:
+                    depth = 0
+
+            case_attr = (path_node.getAttribute('case') or
+                         paths_node.getAttribute('case') or '')
+            if case_attr == 'insensitive':
+                case_sensitive = False
+            elif case_attr == 'sensitive':
+                case_sensitive = True
+            else:
+                case_sensitive = FS_CASE_SENSITIVE
+
+            # Get the path text
+            raw_path = getText(path_node.childNodes).strip()
+            if not raw_path:
+                continue
+
+            # Expand the path (possibly into multiple entries)
+            for expanded_path in expand_path_entries(raw_path):
+                protected_paths.append({
+                    'path': expanded_path,
+                    'depth': depth,
+                    'case_sensitive': case_sensitive,
+                })
+
+    _protected_paths_cache = protected_paths
+    logger.debug("Loaded %d protected paths", len(protected_paths))
+    return _protected_paths_cache
+
+
+def _check_exempt(user_path):
+    """Check if path is exempt from protection
+
+    For ignoring paths like .git under ~/.cache/
+    """
+    assert isinstance(user_path, str)
+    exempt_paths = ('~/.cache', '%temp%', '%tmp%', '/tmp')
+    user_path_normalized = normalize_path(user_path)
+    for path in exempt_paths:
+        exempt_expanded = expand_path(path)
+        if not exempt_expanded:
+            continue
+
+        exempt_normalized = normalize_path(exempt_expanded)
+
+        if path_equal(user_path_normalized, exempt_normalized):
+            return True
+
+        if path_startswith(user_path_normalized, exempt_normalized):
+            return True
+    return False
+
+
+def check_protected_path(user_path):
+    """Check if a user path matches a protected path.
+
+    Args:
+        user_path: The path the user wants to add to delete list
+
+    Returns:
+        A dictionary with match info if protected, None otherwise:
+        - protected_path: The matched protected path
+        - depth: The depth of the protection
+        - case_sensitive: Whether the match was case-sensitive
+    """
+    if _check_exempt(user_path):
+        return None
+    protected_paths = load_protected_paths()
+    if not protected_paths:
+        return None
+
+    for ppath in protected_paths:
+        protected = ppath['path']
+        depth = ppath['depth']
+        case_sensitive = ppath['case_sensitive']
+        user_cmp = normalize_path(user_path, case_sensitive=case_sensitive)
+        protected_cmp = normalize_path(
+            protected, case_sensitive=case_sensitive)
+
+        protected_is_absolute = os.path.isabs(ppath['path'])
+        if not protected_is_absolute:
+            # Relative protected paths should match when user path ends with them
+            if path_has_relative_suffix(user_cmp, protected_cmp,
+                                        case_sensitive=case_sensitive):
+                return ppath
+            continue
+
+        # Exact match
+        if path_equal(user_cmp, protected_cmp, case_sensitive=case_sensitive):
+            return ppath
+
+        # Check if user path is a parent of protected path
+        # (user wants to delete a folder that contains protected items)
+        if path_startswith(protected_cmp, user_cmp,
+                           case_sensitive=case_sensitive):
+            return ppath
+
+        # Check if user path is a child of protected path (within depth)
+        if ((depth is None or depth > 0)
+                and path_startswith(user_cmp, protected_cmp,
+                                    case_sensitive=case_sensitive)):
+            if depth is None:
+                return ppath
+            # Calculate how many levels deep the user path is
+            protected_with_sep = protected_cmp + os.sep
+            relative = user_cmp[len(protected_with_sep):]
+            levels = relative.count(os.sep) + 1
+            if levels <= depth:
+                return ppath
+
+    return None
+
+
+def calculate_impact(path):
+    """Calculate the impact of deleting a path.
+
+    Args:
+        path: The path to calculate impact for
+
+    Returns:
+        A dictionary with:
+        - file_count: Number of files
+        - total_size: Total size in bytes
+        - size_human: Human-readable size string
+    """
+    if not os.path.exists(path):
+        return {
+            'file_count': 0,
+            'total_size': 0,
+            'size_human': '0B',
+        }
+
+    file_count = 0
+    total_size = 0
+
+    try:
+        if os.path.isfile(path):
+            file_count = 1
+            total_size = FileUtilities.getsize(path)
+        elif os.path.isdir(path):
+            for child in FileUtilities.children_in_directory(path, list_directories=False):
+                file_count += 1
+                try:
+                    total_size += FileUtilities.getsize(child)
+                except (OSError, PermissionError) as e:
+                    logger.debug('skipping %s in the impact total: %s',
+                                 child, e)
+    except (OSError, PermissionError) as e:
+        logger.debug("Error calculating impact for %s: %s", path, e)
+
+    return {
+        'file_count': file_count,
+        'total_size': total_size,
+        'size_human': FileUtilities.bytes_to_human(total_size),
+    }
+
+
+def get_warning_message(user_path, impact):
+    """Generate a warning message for a protected path.
+
+    Args:
+        user_path: The path the user wants to add
+        impact: The impact info from calculate_impact
+
+    Returns:
+        A formatted warning message string
+    """
+
+    if impact['file_count'] > 0:
+        # TRANSLATORS: Warning shown when user tries to add a protected path.
+        # %(path)s is the path, %(files)d is number of files, %(size)s is human-readable size
+        # Do not translate the placeholders.
+        # Adapt quotation marks around the path placeholder to the typographic conventions of
+        # your language.
+        msg = _("Warning: '%(path)s' may contain important files.\n\n"
+                "Impact: %(files)d file(s), %(size)s\n\n"
+                "Are you sure you want to add this path?") % {
+            'path': user_path,
+            'files': impact['file_count'],
+            'size': impact['size_human'],
+        }
+    else:
+        # TRANSLATORS: Warning shown when user tries to add a protected path (no files found).
+        # Do not translate the placeholder %(path)s.
+        # Adapt quotation marks around the path placeholder to the typographic conventions of
+        # your language.
+        msg = _("Warning: '%(path)s' may contain important files.\n\n"
+                "Are you sure you want to add this path?") % {
+            'path': user_path,
+        }
+
+    return msg
+
+
+def clear_cache():
+    """Clear the protected paths cache."""
+    # Clearing the cache means rebinding it.
+    # pylint: disable-next=global-statement
+    global _protected_paths_cache
+    _protected_paths_cache = None

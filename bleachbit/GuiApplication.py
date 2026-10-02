@@ -1,0 +1,370 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+import glob
+import os
+import sys
+
+import bleachbit
+from bleachbit import Cleaner, GuiBasic, appicon_path, portable_mode, IS_WINDOWS
+from bleachbit.Cleaner import backends
+from bleachbit.GtkShim import (
+    GLib, Gdk, Gio, Gtk,
+    require_gtk,
+)
+from bleachbit.GUI import logger
+from bleachbit.GuiUtil import get_clipboard_paths
+from bleachbit.GuiWindow import GUI
+from bleachbit.Language import get_text as _, get_active_language_code, get_app_full_name
+from bleachbit.Options import options
+
+# Ensure GTK is available for this GUI module
+require_gtk()
+
+if IS_WINDOWS:
+    from bleachbit import Windows
+    from bleachbit.FontCheckDialog import (
+        create_font_check_dialog,
+        RESPONSE_TEXT_BLURRY,
+        RESPONSE_TEXT_UNREADABLE,
+    )
+
+bleachbit.log_startup_time('GuiApplication imported')
+
+
+class Bleachbit(Gtk.Application):
+    _window = None
+    _shred_paths = None
+    _auto_exit = False
+
+    def __init__(self, uac=True, shred_paths=None, auto_exit=False):
+
+        application_id_suffix = self._init_windows_misc(
+            auto_exit, shred_paths, uac)
+        # Support pytest-xdist parallel workers by making application ID unique
+        xdist_worker = os.environ.get('PYTEST_XDIST_WORKER', '')
+        if xdist_worker:
+            application_id_suffix += xdist_worker
+        application_id = '{}{}'.format(
+            'org.gnome.Bleachbit', application_id_suffix)
+        Gtk.Application.__init__(
+            self, application_id=application_id, flags=Gio.ApplicationFlags.FLAGS_NONE)
+        GLib.set_prgname('org.bleachbit.BleachBit')
+
+        self._font_check_prompt_scheduled = False
+
+        if auto_exit:
+            # This is used for automated testing of whether the GUI can start.
+            # It is called from assert_execute_console() in windows/setup.py
+            self._auto_exit = True
+
+        if shred_paths:
+            self._shred_paths = shred_paths
+
+        if IS_WINDOWS:
+            # clean up nonce files https://github.com/bleachbit/bleachbit/issues/858
+            import atexit
+            atexit.register(Windows.cleanup_nonce)
+        bleachbit.log_startup_time('application created')
+
+    def run(self, *args, **kwargs):
+        """Run the GTK application."""
+        return Gtk.Application.run(self, *args, **kwargs)
+
+    def _init_windows_misc(self, auto_exit, shred_paths, uac):
+        application_id_suffix = ''
+        is_context_menu_executed = auto_exit and shred_paths
+        if not IS_WINDOWS:
+            return ''
+        env_suffix = os.environ.pop('BLEACHBIT_APP_INSTANCE_SUFFIX', '')
+        if env_suffix:
+            application_id_suffix = env_suffix
+        if Windows.elevate_privileges(uac):
+            # privileges escalated in other process
+            sys.exit(0)
+
+        if is_context_menu_executed:
+            # When we have a running application and executing the Windows
+            # context menu command we start a new process with new application_id.
+            # That is because the command line arguments of the context menu command
+            # are not passed to the already running instance.
+            application_id_suffix = 'ContextMenuShred'
+        return application_id_suffix
+
+    def build_app_menu(self):
+        """Register the actions used by the application menu
+
+        The menu itself is built by the headerbar code in GuiWindow.
+        """
+        from bleachbit.Language import setup_translation
+        setup_translation()
+
+        # set up mappings between <attribute name="action"> in app-menu.ui and methods in this class
+        actions = {'shredFiles': self.cb_shred_file,
+                   'shredFolders': self.cb_shred_folder,
+                   'shredClipboard': self.cb_shred_clipboard,
+                   'wipeEmptySpace': self.cb_wipe_empty_space,
+                   'shredQuit': self.cb_shred_quit,
+                   'preferences': self.cb_preferences_dialog,
+                   'about': self.about}
+
+        for action_name, callback in actions.items():
+            action = Gio.SimpleAction.new(action_name, None)
+            action.connect('activate', callback)
+            self.add_action(action)
+
+    def cb_shred_file(self, action, param):
+        """Callback for shredding a file"""
+
+        # get list of files
+        # TRANSLATORS: Title of a file chooser dialog.
+        paths = GuiBasic.browse_files(self._window, _("Choose files to shred"))
+        if not paths:
+            return
+        GUI.shred_paths(self._window, paths)
+
+    def cb_shred_folder(self, action, param):
+        """Callback for shredding a folder"""
+
+        # TRANSLATORS: Title of a folder chooser dialog.
+        title = _("Choose folder to shred")
+        # TRANSLATORS: Button label in a folder chooser dialog.
+        button_label = _('_Delete')
+        paths = GuiBasic.browse_folder(self._window,
+                                       title,
+                                       multiple=True,
+                                       stock_button=button_label)
+        if not paths:
+            return
+        GUI.shred_paths(self._window, paths)
+
+    def cb_shred_clipboard(self, action, param):
+        """Callback for menu option: shred paths from clipboard"""
+        clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        # wait_for_targets() avoids GLib warnings from request_targets() when
+        # the clipboard is empty.
+        has_targets, targets = clipboard.wait_for_targets()
+        if not has_targets:
+            targets = []
+        self.cb_clipboard_uri_received(clipboard, targets, None)
+
+    def cb_clipboard_uri_received(self, clipboard, targets, _data):
+        """Callback for when URIs are received from clipboard
+
+        With GTK 3.18.9 on Windows, there was no text/uri-list in targets,
+        but there is with GTK 3.24.34. However, Windows does not have
+        get_uris().
+        """
+        shred_paths = get_clipboard_paths(clipboard, targets)
+        # TRANSLATORS: Warning log message when attempting to paste files/folders to shred.
+        not_found_msg = _('No paths found in clipboard.')
+        if shred_paths:
+            GUI.shred_paths(self._window, shred_paths,
+                            should_clear_clipboard=True)
+        else:
+            logger.warning(not_found_msg)
+
+    def cb_shred_quit(self, action, param):
+        """Shred settings (for privacy reasons) and quit"""
+        # build a list of paths to delete
+        paths = []
+        if IS_WINDOWS and portable_mode:
+            # in portable mode on Windows, the options directory includes
+            # executables
+            paths.append(bleachbit.options_file)
+            if os.path.isdir(bleachbit.personal_cleaners_dir):
+                paths.append(bleachbit.personal_cleaners_dir)
+            for f in glob.glob(os.path.join(bleachbit.options_dir, "*.bz2")):
+                paths.append(f)
+        else:
+            paths.append(bleachbit.options_dir)
+
+        # prompt the user to confirm
+        if not GUI.shred_paths(self._window, paths, shred_settings=True):
+            logger.debug('user aborted shred')
+            # aborted
+            return
+
+        # Quit the application through the idle loop to allow the worker
+        # to delete the files.  Use the lowest priority because the worker
+        # uses the standard priority. Otherwise, this will quit before
+        # the files are deleted.
+        #
+        # Rebuild a minimal bleachbit.ini when quitting
+        GLib.idle_add(self.quit, None, None, True,
+                      priority=GLib.PRIORITY_LOW)
+
+    def cb_wipe_empty_space(self, action, param):
+        """callback to wipe empty space in arbitrary folder"""
+        # TRANSLATORS: Title of a folder chooser dialog.
+        title = _("Choose a folder")
+        # TRANSLATORS: Button label in a folder chooser dialog.
+        # Underscore is for accelerator key.
+        button_label = _('_OK')
+        path = GuiBasic.browse_folder(self._window,
+                                      title,
+                                      multiple=False,
+                                      stock_button=button_label)
+        if not path:
+            # user cancelled
+            return
+
+        backends['_gui'] = Cleaner.create_wipe_empty_space_cleaner(path)
+
+        # execute
+        operations = {'_gui': ['empty_space']}
+        self._window.preview_or_run_operations(True, operations)
+
+    def get_preferences_dialog(self):
+        return self._window.get_preferences_dialog()
+
+    def cb_preferences_dialog(self, action, param):
+        """Callback for preferences dialog"""
+        self._window.show_preferences_dialog()
+
+    def get_about_dialog(self):
+        dialog = Gtk.AboutDialog(comments='本软件基于 BleachBit 构建',
+                                 copyright=bleachbit.APP_COPYRIGHT,
+                                 program_name=get_app_full_name(),
+                                 version=bleachbit.APP_VERSION,
+                                 website=bleachbit.APP_URL,
+                                 website_label='打开官网',
+                                 transient_for=self._window)
+        try:
+            with open(bleachbit.license_filename, encoding='utf-8') as f_license:
+                dialog.set_license(f_license.read())
+        except (IOError, TypeError):
+            # TRANSLATORS: License text shown in the 'About' dialog.
+            license_msg = _("GNU General Public License version 3 or later.\n"
+                            "See https://www.gnu.org/licenses/gpl-3.0.txt")
+            dialog.set_license(license_msg)
+        if appicon_path and os.path.exists(appicon_path):
+            icon = Gtk.Image.new_from_file(appicon_path)
+            dialog.set_logo(icon.get_pixbuf())
+
+        return dialog
+
+    def about(self, _action, _param):
+        """Create and show the about dialog"""
+        dialog = self.get_about_dialog()
+        dialog.run()
+        dialog.destroy()
+
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        bleachbit.log_startup_time('GTK startup done')
+        self.build_app_menu()
+        bleachbit.log_startup_time('app menu built')
+
+    def quit(self, _action=None, _param=None, init_configuration=False):
+        if init_configuration:
+            # After "shred settings and quit", rebuild the minimal configuration.
+            # which is important for portable mode.
+            bleachbit.Options.init_configuration()
+        else:
+            # Flush any pending preference changes immediately instead of
+            # relying on the delayed background timer (FLUSH_DELAY_SECS),
+            # which would otherwise silently lose changes made shortly
+            # before quitting (e.g. toggling a checkbox and closing the
+            # app within a few seconds).
+            options.commit()
+        self._window.destroy()
+
+    def do_activate(self):
+        if not self._window:
+            self._window = GUI(
+                application=self, title=get_app_full_name(), auto_exit=self._auto_exit)
+        self._window.present()
+        if self._shred_paths:
+            GLib.idle_add(GUI.shred_paths, self._window,
+                          self._shred_paths, priority=GLib.PRIORITY_LOW)
+            # When we shred paths and auto exit with the Windows Explorer context menu command we close the
+            # application in GUI.shred_paths, because if it is closed from here there are problems.
+            # Most probably this is something related with how GTK handles idle quit calls.
+        elif self._auto_exit:
+            GLib.idle_add(self.quit,
+                          priority=GLib.PRIORITY_LOW)
+            print('Success')
+        else:
+            # Check for orphaned wipe files from interrupted operations
+            GLib.idle_add(self._window.check_orphaned_wipe_files,
+                          priority=GLib.PRIORITY_LOW)
+
+        self._maybe_prompt_font_check()
+
+    def _should_show_font_check_dialog(self):
+        """Determine whether to show the font check dialog on Windows."""
+        if not IS_WINDOWS:
+            return False
+        if self._auto_exit:
+            return False
+        if self._shred_paths:
+            return False
+        # User made an explicit choice of a backend.
+        if os.environ.get('PANGOCAIRO_BACKEND', ''):
+            return False
+        if options.get('use_fontconfig_backend'):
+            return False
+        if options.get('font_check_completed'):
+            return False
+        # Skip for CJK languages (Chinese, Japanese, Korean).
+        # They do not support Arial font, and they seem not to
+        # be affected by the font bug.
+        lang = get_active_language_code()
+        if lang.startswith(('zh', 'ja', 'ko')):
+            return False
+        return True
+
+    def _maybe_prompt_font_check(self):
+        """Schedule the font check dialog if needed."""
+        if not self._should_show_font_check_dialog():
+            return
+        if self._font_check_prompt_scheduled:
+            return
+        self._font_check_prompt_scheduled = True
+        GLib.idle_add(self._show_font_check_dialog,
+                      priority=GLib.PRIORITY_DEFAULT_IDLE)
+
+    def _show_font_check_dialog(self):
+        """Show the font check dialog and handle the response."""
+        if not IS_WINDOWS:
+            return False
+        if not self._window:
+            return False
+        # pylint: disable-next=possibly-used-before-assignment
+        dialog = create_font_check_dialog(self._window)
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.YES:
+            options.set('font_check_completed', True)
+        # pylint: disable-next=possibly-used-before-assignment
+        elif response in (RESPONSE_TEXT_BLURRY, RESPONSE_TEXT_UNREADABLE):
+            self._restart_with_fontconfig_backend()
+        # If user dismisses the dialog, ask again next time.
+        return False
+
+    def _restart_with_fontconfig_backend(self):
+        """Restart BleachBit with the fontconfig Pango backend."""
+        from bleachbit import General
+        executable = General.get_executable()
+        if getattr(sys, 'frozen', False):
+            cmd = [executable] + sys.argv[1:]
+        else:
+            script_path = os.path.abspath(sys.argv[0])
+            cmd = [executable, script_path] + sys.argv[1:]
+        logger.info('Restarting BleachBit with fontconfig backend: %s', cmd)
+        env = os.environ.copy()
+        env['PANGOCAIRO_BACKEND'] = 'fc'
+        env['BLEACHBIT_APP_INSTANCE_SUFFIX'] = f'Restart{os.getpid()}'
+        options.set('font_check_completed', True)
+        options.set('use_fontconfig_backend', True)
+        if General.run_external_nowait(cmd, env=env):
+            self.quit()
+        else:
+            # This logs to the main application window
+            logger.error('Failed to restart BleachBit with fontconfig backend')
+            options.set('font_check_completed', False)
+            options.set('use_fontconfig_backend', False)

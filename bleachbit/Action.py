@@ -1,0 +1,768 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+"""
+Actions that perform cleaning
+"""
+
+# standard imports
+import glob
+import logging
+import os
+import re
+from itertools import product
+
+# first party imports
+from bleachbit import Command, FileUtilities, General, Special, DeepScan, Cookie as CookieMod  # mod=module
+from bleachbit import FS_SCAN_RE_FLAGS, IS_MAC, IS_POSIX, IS_WINDOWS
+from bleachbit.Constant import CLEAN_FILE_LABEL
+from bleachbit.Cookie import load_keep_list
+from bleachbit.Language import get_text as _
+
+if IS_POSIX:
+    from bleachbit import Unix
+
+if IS_WINDOWS:
+    from bleachbit import Windows
+
+logger = logging.getLogger(__name__)
+
+_GLOB_CHARS_RE = re.compile(r'[?*\[\]]')
+
+
+def has_glob(s):
+    """Checks whether the string contains any glob characters"""
+    return _GLOB_CHARS_RE.search(s) is not None
+
+
+def expand_multi_var(s, variables):
+    """Expand strings with potentially-multiple values.
+
+    The placeholder is written in the format $$foo$$.
+
+    The function always returns a list of one or more strings.
+    """
+    if not variables or s.find('$$') == -1:
+        # The input string is missing $$ or no variables are given.
+        return (s,)
+    var_keys_used = []
+    ret = []
+    for var_key in variables.keys():
+        sub = f'$${var_key}$$'
+        if s.find(sub) > -1:
+            var_keys_used.append(var_key)
+    if not var_keys_used:
+        # No matching variables used, so return input string unmodified.
+        return (s,)
+    # filter the dictionary to the keys used
+    vars_used = {key: value for key,
+                 value in variables.items() if key in var_keys_used}
+    # create a product of combinations
+    vars_product = (dict(zip(vars_used, x))
+                    for x in product(*vars_used.values()))
+    for var_set in vars_product:
+        ms = s  # modified version of input string
+        for var_key, var_value in var_set.items():
+            sub = f'$${var_key}$$'
+            ms = ms.replace(sub, var_value)
+        ret.append(ms)
+    if ret:
+        return ret
+    # The string has $$, but it did not match anything
+    return (s,)
+
+#
+# Plugin framework
+# https://martyalchin.com/2008/jan/10/simple-plugin-framework/
+#
+
+
+class PluginMount(type):
+
+    """A simple plugin framework"""
+
+    def __init__(cls, _name, _bases, _attrs):
+        if not hasattr(cls, 'plugins'):
+            cls.plugins = []
+            cls.plugins_by_key = {}
+        else:
+            cls.plugins.append(cls)
+            # Indexed here, not on demand: Cleaner and tests register later.
+            action_key = getattr(cls, 'action_key', None)
+            if action_key is not None:
+                cls.plugins_by_key[action_key] = cls
+
+
+class ActionProvider(metaclass=PluginMount):
+
+    """Abstract base class for performing individual cleaning actions"""
+
+    def __init__(self, action_node, path_vars=None):
+        """Create ActionProvider from CleanerML <action>"""
+
+    def get_deep_scan(self):
+        """Return an iterable of deep scan searches (empty by default)"""
+        return ()
+
+    def get_commands(self):
+        """Yield each command (which can be previewed or executed)"""
+
+
+#
+# base class
+#
+class FileActionProvider(ActionProvider):
+
+    """Base class for providers which work on individual files"""
+    action_key = '_file'
+    CACHEABLE_SEARCHERS = ('walk.files',)
+    # global cache <search_type, path, list_of_entries, complete>
+    cache = ('nothing', '', tuple(), False)
+
+    def __init__(self, action_element, path_vars=None):
+        """Initialize file search"""
+        ActionProvider.__init__(self, action_element, path_vars)
+        self.regex = action_element.getAttribute('regex')
+        assert (isinstance(self.regex, (str, type(None))))
+        self.nregex = action_element.getAttribute('nregex')
+        assert (isinstance(self.nregex, (str, type(None))))
+        self.wholeregex = action_element.getAttribute('wholeregex')
+        assert (isinstance(self.wholeregex, (str, type(None))))
+        self.nwholeregex = action_element.getAttribute('nwholeregex')
+        assert (isinstance(self.nwholeregex, (str, type(None))))
+        self.search = action_element.getAttribute('search')
+        self.object_type = action_element.getAttribute('type')
+        self._set_paths(action_element.getAttribute('path'), path_vars)
+        self.ds = None
+        if 'deep' == self.search:
+            self.ds = (self.paths[0], DeepScan.Search(
+                command=action_element.getAttribute('command'),
+                regex=self.regex, nregex=self.nregex,
+                wholeregex=self.wholeregex, nwholeregex=self.nwholeregex))
+            if len(self.paths) != 1:
+                logger.warning(
+                    # TRANSLATORS: Multi-value variables are explained
+                    # in the online documentation. Basically, they are like
+                    # an environment variable, but each multi-value variable
+                    # can have multiple values. They're a way to make CleanerML
+                    # files more concise.
+                    _("Deep scan does not support multi-value variables."))
+        # If the filter is not needed, bypass it for speed.
+        self._use_fast_path = not any([self.object_type, self.regex, self.nregex,
+                                       self.wholeregex, self.nwholeregex])
+
+    def _set_paths(self, raw_path, path_vars):
+        """Set the list of paths to work on"""
+        self.paths = []
+        # expand special $$foo$$ which may give multiple values
+        for path2 in expand_multi_var(raw_path, path_vars):
+            if IS_WINDOWS:
+                paths = Windows.expand_windows_system_vars(path2)
+            else:
+                paths = (path2, )
+            for path3 in paths:
+                path3 = os.path.expanduser(os.path.expandvars(path3))
+                if IS_WINDOWS and path3:
+                    # convert forward slash to backslash for compatibility with getsize()
+                    # and for display.  Do not convert an empty path, or it will become
+                    # the current directory (.).
+                    path3 = os.path.normpath(path3)
+                self.paths.append(path3)
+
+    def get_deep_scan(self):
+        if self.ds is None:
+            return
+        yield self.ds
+
+    def get_paths(self):
+        """Dispatch to fast or filtered path retrieval based on filter configuration."""
+        if self._use_fast_path:
+            yield from self._get_paths()
+        else:
+            yield from self._get_paths_filtered()
+
+    def _get_paths_filtered(self):
+        """Process the filters: regex, nregex, type
+
+        If a filter is defined and it fails to match, this function
+        returns False. Otherwise, this function returns True."""
+
+        # optimize tight loop, avoid slow python "."
+        regex = self.regex
+        nregex = self.nregex
+        wholeregex = self.wholeregex
+        nwholeregex = self.nwholeregex
+        basename = os.path.basename
+        object_type = self.object_type
+        if self.regex:
+            regex_c_search = re.compile(self.regex, FS_SCAN_RE_FLAGS).search
+        else:
+            regex_c_search = None
+
+        if self.nregex:
+            nregex_c_search = re.compile(self.nregex, FS_SCAN_RE_FLAGS).search
+        else:
+            nregex_c_search = None
+
+        if self.wholeregex:
+            wholeregex_c_search = re.compile(
+                self.wholeregex, FS_SCAN_RE_FLAGS).search
+        else:
+            wholeregex_c_search = None
+
+        if self.nwholeregex:
+            nwholeregex_c_search = re.compile(
+                self.nwholeregex, FS_SCAN_RE_FLAGS).search
+        else:
+            nwholeregex_c_search = None
+
+        for path in self._get_paths():
+            if regex and not regex_c_search(basename(path)):
+                continue
+
+            if nregex and nregex_c_search(basename(path)):
+                continue
+
+            if wholeregex and not wholeregex_c_search(path):
+                continue
+
+            if nwholeregex and nwholeregex_c_search(path):
+                continue
+
+            if object_type:
+                if 'f' == object_type and not os.path.isfile(path):
+                    continue
+                if 'd' == object_type and not os.path.isdir(path):
+                    continue
+
+            yield path
+
+    def _get_paths(self):
+        """Return a filtered list of files"""
+
+        def get_file(path):
+            if os.path.lexists(path):
+                yield path
+
+        def get_walk_all(top):
+            """Delete files and directories inside a directory but not the top directory"""
+            for expanded in glob.iglob(top):
+                yield from FileUtilities.children_in_directory(expanded, True)
+                # This is a lint checker because this scenario may
+                # indicate the cleaner developer made a mistake.
+                if os.path.isfile(expanded):
+                    logger.debug(
+                        # TRANSLATORS: This is a lint-style warning that there seems to be a
+                        # mild mistake in the CleanerML file because walk.all is expected to
+                        # be used with directories instead of with files. Do not translate
+                        # search="walk.all" and path="%s"
+                        _('search="walk.all" used with regular file path="%s"'),
+                        expanded,
+                    )
+
+        def get_walk_files(top):
+            """Delete files inside a directory but not any directories"""
+            for expanded in glob.iglob(top):
+                yield from FileUtilities.children_in_directory(expanded, False)
+
+        def get_top(top):
+            """Delete directory contents and the directory itself"""
+            yield from get_walk_all(top)
+            if os.path.exists(top):
+                yield top
+
+        if 'deep' == self.search:
+            return
+
+        search_functions = {
+            'file': get_file,
+            'glob': glob.iglob,
+            'walk.all': get_walk_all,
+            'walk.files': get_walk_files,
+            'walk.top': get_top
+        }
+
+        if self.search not in search_functions:
+            raise RuntimeError(f"Invalid search='{self.search}'")
+
+        func = search_functions[self.search]
+
+        cache = self.__class__.cache
+        for input_path in self.paths:
+            if self.search == 'glob' and not has_glob(input_path):
+                # TRANSLATORS: This is a lint-style warning that the CleanerML file
+                # specified a search for glob, but the path specified didn't have any
+                # wildcard patterns. Therefore, maybe the developer either missed
+                # the wildcard or should search using path="file" which does not
+                # expect or support wildcards in the path.
+                logger.debug(_('path="%s" is not a glob pattern'), input_path)
+
+            # use cache
+            if (self.search in self.CACHEABLE_SEARCHERS and cache[0] == self.search
+                    and cache[1] == input_path and cache[3]):
+                yield from cache[2]
+                return
+            self.__class__.cache = ('cleared by', input_path, tuple(), False)
+
+            # build new cache
+            if self.search in self.CACHEABLE_SEARCHERS:
+                entries = []
+                self.__class__.cache = (
+                    self.search, input_path, entries, False)
+                for path in func(input_path):
+                    entries.append(path)
+                    yield path
+                # Mark complete only once the walk finishes, so an
+                # early-abandoned generator doesn't poison the cache
+                self.__class__.cache = (self.search, input_path, entries, True)
+            else:
+                yield from func(input_path)
+
+    def get_commands(self):
+        raise NotImplementedError('not implemented')
+
+
+#
+# Action providers
+#
+
+
+class AptAutoclean(ActionProvider):
+
+    """Action to run 'apt-get autoclean'"""
+    action_key = 'apt.autoclean'
+
+    def get_commands(self):
+        assert IS_POSIX
+        # If apt-get is not installed, then enable fast auto-hide.
+        # The exe_exists() function is fast.
+        if not FileUtilities.exe_exists(General.resolve_exe('apt-get')):
+            return
+        yield Command.Function(None,
+                               # pylint: disable=possibly-used-before-assignment
+                               Unix.apt_autoclean,
+                               'apt-get autoclean')
+
+
+class AptAutoremove(ActionProvider):
+
+    """Action to run 'apt-get autoremove'"""
+    action_key = 'apt.autoremove'
+
+    def get_commands(self):
+        if not FileUtilities.exe_exists(General.resolve_exe('apt-get')):
+            return
+        yield Command.Function(None,
+                               Unix.apt_autoremove,
+                               'apt-get autoremove')
+
+
+class AptClean(ActionProvider):
+
+    """Action to run 'apt-get clean'"""
+    action_key = 'apt.clean'
+
+    def get_commands(self):
+        if not FileUtilities.exe_exists(General.resolve_exe('apt-get')):
+            return
+        yield Command.Function(None,
+                               Unix.apt_clean,
+                               'apt-get clean')
+
+
+class ChromeAutofill(FileActionProvider):
+
+    """Action to clean 'autofill' table in Google Chrome/Chromium"""
+    action_key = 'chrome.autofill'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                Special.delete_chrome_autofill,
+                CLEAN_FILE_LABEL)
+
+
+class ChromeDatabases(FileActionProvider):
+
+    """Action to clean Databases.db in Google Chrome/Chromium"""
+    action_key = 'chrome.databases_db'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                Special.delete_chrome_databases_db,
+                CLEAN_FILE_LABEL)
+
+
+class ChromeFavicons(FileActionProvider):
+
+    """Action to clean 'Favicons' file in Google Chrome/Chromium"""
+    action_key = 'chrome.favicons'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                Special.delete_chrome_favicons,
+                CLEAN_FILE_LABEL)
+
+
+class ChromeOrphanedFrameworkVersions(FileActionProvider):
+
+    """Action to remove orphaned old version folders left behind under
+    a Chromium-based browser's Contents/Frameworks/*.framework/Versions/
+    on macOS, keeping only the one the 'Current' symlink points to."""
+    action_key = 'macos.orphaned_framework_versions'
+
+    def get_commands(self):
+        if not IS_MAC:
+            # This action only ever applies to macOS .app bundles;
+            # 'Unix' may not even be imported on other platforms.
+            return
+        for versions_dir in self.get_paths():
+            for orphan_path in Unix.orphaned_framework_versions(versions_dir):
+                yield Command.Delete(orphan_path)
+
+
+class ChromeHistory(FileActionProvider):
+
+    """Action to clean 'History' file in Google Chrome/Chromium"""
+    action_key = 'chrome.history'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                Special.delete_chrome_history,
+                CLEAN_FILE_LABEL)
+
+
+class ChromeKeywords(FileActionProvider):
+
+    """Action to clean 'keywords' table in Google Chrome/Chromium"""
+    action_key = 'chrome.keywords'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                Special.delete_chrome_keywords,
+                CLEAN_FILE_LABEL)
+
+
+class Cookie(FileActionProvider):
+
+    """Action to selectively clean cookies in Chromium/Mozilla browsers"""
+    action_key = 'cookie'
+
+    def get_commands(self):
+        keep_list = load_keep_list()
+
+        if not keep_list:
+            # If nothing is being kept, use regular delete for better performance
+            for path in self.get_paths():
+                yield Command.Delete(path)
+            return
+
+        # Otherwise, clean cookies using the keep list.
+        for path in self.get_paths():
+            def delete_func(p=path):
+                # perform deletion; return value is ignored by Command.Function for file paths
+                try:
+                    CookieMod.delete_cookies(p, keep_list, really_delete=True)
+                except Exception as e:
+                    logger.warning('Cookie cleaning failed on %s: %s', p, e)
+                return 0
+
+            def preview_func(p=path):
+                # return estimated file size reduction
+                try:
+                    result = CookieMod.delete_cookies(
+                        p, keep_list, really_delete=False)
+                    return result.get('file_size_reduction', 0)
+                except Exception as e:
+                    logger.warning(
+                        'Cookie cleaning preview failed on %s: %s', p, e)
+                    return 0
+
+            yield Command.Function(
+                path,
+                delete_func,
+                # TRANSLATORS: This is the name of a cleaning action. 'Clean' is a verb.
+                # It shows in the log of actions performed.
+                _('Clean cookies'),
+                preview_func)
+
+
+class Delete(FileActionProvider):
+
+    """Action to delete files"""
+    action_key = 'delete'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Delete(path)
+
+
+class Ini(FileActionProvider):
+
+    """Action to clean .ini configuration files"""
+    action_key = 'ini'
+
+    def __init__(self, action_element, path_vars=None):
+        FileActionProvider.__init__(self, action_element, path_vars)
+        self.section = action_element.getAttribute('section')
+        self.parameter = action_element.getAttribute('parameter')
+        if self.parameter == "":
+            self.parameter = None
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Ini(path, self.section, self.parameter)
+
+
+class Journald(ActionProvider):
+    """Action to run 'journalctl --vacuum-time=1'"""
+    action_key = 'journald.clean'
+
+    def get_commands(self):
+        # If journalctl is not installed, then enable fast auto-hide.
+        if not FileUtilities.exe_exists(General.resolve_exe('journalctl')):
+            return
+        yield Command.Function(None, Unix.journald_clean, 'journalctl --vacuum-time=1')
+
+
+class Json(FileActionProvider):
+
+    """Action to clean JSON configuration files"""
+    action_key = 'json'
+
+    def __init__(self, action_element, path_vars=None):
+        FileActionProvider.__init__(self, action_element, path_vars)
+        self.address = action_element.getAttribute('address')
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Json(path, self.address)
+
+
+class MozillaUrlHistory(FileActionProvider):
+
+    """Action to clean Mozilla (Firefox) URL history in places.sqlite"""
+    action_key = 'mozilla.url.history'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(path,
+                                   Special.delete_mozilla_url_history,
+                                   CLEAN_FILE_LABEL)
+
+
+class MozillaFavicons(FileActionProvider):
+
+    """Action to clean Mozilla (Firefox) favicons in favicons.sqlite"""
+    action_key = 'mozilla.favicons'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(path,
+                                   Special.delete_mozilla_favicons,
+                                   CLEAN_FILE_LABEL)
+
+
+class OfficeRegistryModifications(FileActionProvider):
+
+    """Action to delete LibreOffice history"""
+    action_key = 'office_registrymodifications'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                Special.delete_office_registrymodifications,
+                CLEAN_FILE_LABEL)
+
+
+class Process(ActionProvider):
+
+    """Action to run a process"""
+    action_key = 'process'
+
+    def __init__(self, action_element, path_vars=None):
+        ActionProvider.__init__(self, action_element, path_vars)
+        self.cmd = os.path.expandvars(action_element.getAttribute('cmd'))
+        # by default, wait
+        self.wait = True
+        wait = action_element.getAttribute('wait')
+        if wait and wait.lower()[0] in ('f', 'n'):
+            # false or no
+            self.wait = False
+
+    def get_commands(self):
+
+        def run_process():
+            try:
+                args = General.shell_split(self.cmd)
+                (rc, stdout, stderr) = General.run_external(args, wait=self.wait)
+            except Exception as e:
+                raise RuntimeError(
+                    f'Exception in external command\nCommand: {args}\nError: {str(e)}') from e
+            if self.wait and 0 != rc:
+                logger.warning('Command: %s\nReturn code: %d\nStdout: %s\nStderr: %s\n',
+                               args, rc, stdout, stderr)
+            return 0
+        yield Command.Function(path=None, func=run_process,
+                               # TRANSLATORS: %s is the command line to be executed
+                               label=_("Run external command: %s") % self.cmd)
+
+
+class Shred(FileActionProvider):
+
+    """Action to shred files (override preference)"""
+    action_key = 'shred'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Shred(path)
+
+
+class SqliteVacuum(FileActionProvider):
+
+    """Action to vacuum SQLite databases"""
+    action_key = 'sqlite.vacuum'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Function(
+                path,
+                FileUtilities.vacuum_sqlite3,
+                # TRANSLATORS: Vacuum is a verb.  The term is jargon
+                # from the SQLite database.  Microsoft Access uses
+                # the term 'Compact Database' (which you may translate
+                # instead).  Another synonym is 'defragment.'
+                _('Vacuum'))
+
+
+class Truncate(FileActionProvider):
+
+    """Action to truncate files"""
+    action_key = 'truncate'
+
+    def get_commands(self):
+        for path in self.get_paths():
+            yield Command.Truncate(path)
+
+
+class WinShellChangeNotify(ActionProvider):
+
+    """Action to clean the Windows Registry"""
+    action_key = 'win.shell.change.notify'
+
+    def get_commands(self):
+        assert IS_WINDOWS
+        yield Command.Function(
+            None,
+            # pylint: disable=possibly-used-before-assignment
+            Windows.shell_change_notify,
+            # TRANSLATORS: This is the name of an action. 'Refresh' is a verb.
+            _('Refresh Windows shell'))
+
+
+class Winreg(ActionProvider):
+
+    """Action to clean the Windows Registry"""
+    action_key = 'winreg'
+
+    def __init__(self, action_element, path_vars=None):
+        ActionProvider.__init__(self, action_element, path_vars)
+        self.keyname = action_element.getAttribute('path')
+        self.name = action_element.getAttribute('name')
+        self.excludekeys = []
+
+    def get_commands(self):
+        if IS_WINDOWS:
+            yield Command.Winreg(self.keyname, self.name, self.excludekeys)
+
+
+class YumCleanAll(ActionProvider):
+
+    """Action to run 'yum clean all'"""
+    action_key = 'yum.clean_all'
+
+    def get_commands(self):
+        # If yum is not installed, then enable fast auto-hide.
+        if not FileUtilities.exe_exists(General.resolve_exe('yum')):
+            return
+
+        yield Command.Function(
+            None,
+            Unix.yum_clean,
+            'yum clean all')
+
+
+class DnfCleanAll(ActionProvider):
+
+    """Action to run 'dnf clean all'"""
+    action_key = 'dnf.clean_all'
+
+    def get_commands(self):
+        # If dnf is not installed, then enable fast auto-hide.
+        if not FileUtilities.exe_exists(General.resolve_exe('dnf')):
+            return
+
+        yield Command.Function(
+            None,
+            Unix.dnf_clean,
+            'dnf clean all')
+
+
+class DnfAutoremove(ActionProvider):
+
+    """Action to run 'dnf autoremove'"""
+    action_key = 'dnf.autoremove'
+
+    def get_commands(self):
+        # If dnf is not installed, then enable fast auto-hide.
+        if not FileUtilities.exe_exists(General.resolve_exe('dnf')):
+            return
+
+        yield Command.Function(
+            None,
+            Unix.dnf_autoremove,
+            'dnf autoremove')
+
+
+class PacmanCache(ActionProvider):
+
+    """Action to run `paccache -rk0'"""
+    action_key = 'pacman.cache'
+
+    def get_commands(self):
+        if not FileUtilities.exe_exists(General.resolve_exe('paccache')):
+            return
+
+        yield Command.Function(
+            None,
+            Unix.pacman_cache,
+            'paccache -rk0')
+
+
+class SnapDisabled(ActionProvider):
+
+    """Action to remove disabled snaps"""
+    action_key = 'snap.disabled'
+
+    def get_commands(self):
+        # If snap is not installed or snapd is not active, enable fast auto-hide.
+        if not Unix.snapd_is_active():
+            return
+        yield Command.Function(
+            None,
+            Unix.snap_disabled_clean,
+            'snap remove disabled',
+            preview_func=Unix.snap_disabled_preview)

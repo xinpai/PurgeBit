@@ -1,0 +1,319 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+"""
+WindowInfo class and utility functions for GUI
+"""
+
+import importlib.util
+import os
+import threading
+from typing import Optional
+
+from bleachbit import FileUtilities, IS_MAC, IS_WINDOWS
+from bleachbit.GUI import logger
+from bleachbit.Language import get_app_name
+from bleachbit.GtkShim import (
+    GLib, Gdk, Gtk, gi,
+    suppress_pygobject_import_warnings,
+)
+
+
+class WindowInfo:
+    def __init__(self, x, y, width, height, monitor_model):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.monitor_model = monitor_model
+
+    def __str__(self):
+        return f"WindowInfo(x={self.x}, y={self.y}, width={self.width}, height={self.height}, monitor_model={self.monitor_model})"
+
+
+def clear_clipboard():
+    """Clear the clipboard buffer"""
+    clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+    clipboard.set_text(' ', 1)
+    clipboard.clear()
+    flush_gtk_events()
+    # GTK may leave the clipboard locked, so the win32api may
+    # get an "access denied" error.
+    if IS_WINDOWS:
+        import bleachbit.Windows
+        try:
+            bleachbit.Windows.clear_clipboard()
+        except bleachbit.Windows.pywintypes.error as e:
+            winerror = getattr(e, 'winerror', e.args[0] if e.args else None)
+            if winerror != 5:
+                raise
+            logger.debug(
+                'Failed to clear Windows clipboard using win32 API',
+                exc_info=True)
+
+
+def get_clipboard_paths(clipboard=None, targets=None):
+    """Returns paths from clipboard as a list"""
+    if clipboard is None:
+        clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+    if IS_WINDOWS:
+        # Prefer native CF_HDROP data when available. Query Win32 before
+        # wait_for_targets() because GTK target queries can race with CF_HDROP.
+        import bleachbit.Windows
+        win32_paths = ()
+        try:
+            win32_paths = bleachbit.Windows.get_clipboard_paths()
+            if not win32_paths:
+                flush_gtk_events()
+                win32_paths = bleachbit.Windows.get_clipboard_paths()
+        except bleachbit.Windows.pywintypes.error as e:
+            winerror = getattr(e, 'winerror', e.args[0] if e.args else None)
+            if winerror != 5:
+                raise
+        if win32_paths:
+            return list(win32_paths)
+
+    if targets is None:
+        has_targets, targets = clipboard.wait_for_targets()
+        if not has_targets:
+            targets = []
+
+    # Compare names: an interned Gdk.Atom does not reliably compare equal to
+    # the atom for the same name in the target list.
+    targets_by_name = {}
+    has_unusable_target_name = False
+    for target in targets:
+        if target is None:
+            # On macOS/Quartz, a clipboard target whose NSPasteboard type
+            # cannot be mapped to a Gdk.Atom can surface here as None
+            # instead of a valid atom object (seen alongside a
+            # 'gdk_atom_intern: assertion atom_name != NULL failed'
+            # warning), rather than raising or being omitted.
+            has_unusable_target_name = True
+            logger.debug('Skipping a None clipboard target')
+            continue
+        try:
+            target_name = target.name()
+        except UnicodeDecodeError:
+            has_unusable_target_name = True
+            logger.debug(
+                'Failed to decode clipboard target name', exc_info=True)
+        else:
+            if target_name == 'Gdk.Atom':
+                has_unusable_target_name = True
+            else:
+                targets_by_name[target_name] = target
+
+    shred_paths = []
+    uri_target = targets_by_name.get('text/uri-list')
+    if uri_target is None and has_unusable_target_name:
+        # Use intern(), not atom_intern_static_string(), which keeps a raw
+        # pointer to our string instead of copying it and can corrupt the
+        # atom once that string is garbage collected.
+        uri_target = Gdk.Atom.intern('text/uri-list', False)
+    if uri_target is not None:
+        # Linux
+        shred_uri_contents = clipboard.wait_for_contents(uri_target)
+        if shred_uri_contents:
+            shred_paths = FileUtilities.uris_to_paths(
+                shred_uri_contents.get_uris())
+
+    if not shred_paths and (
+            'text/plain' in targets_by_name or
+            'UTF8_STRING' in targets_by_name):
+        # Plain text pasted from a text editor
+        text = clipboard.wait_for_text()
+        if text:
+            shred_paths = [p.strip()
+                           for p in text.splitlines() if p.strip()]
+    return shred_paths
+
+
+def get_font_size_from_name(font_name):
+    """Get the font size from the font name"""
+    if not isinstance(font_name, str):
+        return None
+    if not font_name:
+        return None
+    try:
+        number_part = font_name.split()[-1]
+    except IndexError:
+        return None
+    if '.' in number_part:
+        return int(float(number_part))
+    try:
+        size_int = int(number_part)
+    except ValueError:
+        return None
+    if size_int < 1:
+        return None
+    return size_int
+
+
+def get_window_info(window):
+    """Get the geometry and monitor of a window.
+
+    window: Gtk.Window
+
+    https://docs.gtk.org/gdk3/method.Screen.get_monitor_at_window.html
+    Deprecated since: 3.22
+    Use gdk_display_get_monitor_at_window() instead.
+
+    https://docs.gtk.org/gdk3/method.Display.get_monitor_at_window.html
+    Available since: 3.22
+
+    https://docs.gtk.org/gdk3/method.Screen.get_monitor_geometry.html
+    Deprecated since: 3.22
+    Use gdk_monitor_get_geometry() instead.
+
+    https://docs.gtk.org/gdk3/method.Monitor.get_geometry.html
+    Available since: 3.22
+
+    Returns a Rectangle-like object with with extra `monitor_model`
+    property with the monitor model string.
+    """
+    assert window is not None
+    assert isinstance(window, Gtk.Window)
+    gdk_window = window.get_window()
+    display = Gdk.Display.get_default()
+    assert display is not None
+    monitor = display.get_monitor_at_window(gdk_window)
+    assert monitor is not None
+    geo = monitor.get_geometry()
+    assert geo is not None
+    assert isinstance(geo, Gdk.Rectangle)
+    if display.get_n_monitors() > 0 and monitor.get_model():
+        monitor_model = monitor.get_model()
+    else:
+        monitor_model = "(unknown)"
+    return WindowInfo(geo.x, geo.y, geo.width, geo.height, monitor_model)
+
+
+def flush_gtk_events(max_iterations: int = 5):
+    """Process pending GTK events to allow style updates to land."""
+    iterations = 0
+    while Gtk.events_pending() and (max_iterations is None or iterations < max_iterations):
+        Gtk.main_iteration_do(False)
+        iterations += 1
+
+
+def resolve_icon_name(icon_name, fallback_name='image-missing'):
+    """Return ``icon_name`` if it resolves in the current icon theme.
+
+    ``Gtk.Image.new_from_icon_name`` and ``Gtk.Button.new_from_icon_name``
+    silently substitute a fallback icon when the requested name is not found
+    in the current icon theme, which makes missing icons hard to notice.
+    This helper checks the theme first, logs a warning when the icon is
+    missing, and returns ``fallback_name`` (the standard "image-missing"
+    icon) so the substitution is explicit.
+    """
+    theme = Gtk.IconTheme.get_default()
+    if theme is None:
+        logger.warning(
+            'No icon theme available, cannot validate icon: %s', icon_name)
+        return fallback_name
+    if not theme.has_icon(icon_name):
+        logger.warning('Icon not found in theme, falling back: %s', icon_name)
+        return fallback_name
+    return icon_name
+
+
+def load_icon_or_fallback(icon_name, size=None,
+                          fallback_name='image-missing'):
+    """Return a ``Gtk.Image`` for ``icon_name``, falling back if missing.
+
+    ``size`` is a ``Gtk.IconSize``, defaulting to ``Gtk.IconSize.MENU``
+    when None (resolved at call time, not import time).
+
+    See :func:`resolve_icon_name` for the fallback behavior.
+    """
+    if size is None:
+        size = Gtk.IconSize.MENU
+    return Gtk.Image.new_from_icon_name(
+        resolve_icon_name(icon_name, fallback_name), size)
+
+
+def notify(msg):
+    """Show a popup-notification"""
+    if IS_MAC:
+        # The macOS GTK stack has no libnotify typelib, so use AppleScript.
+        from bleachbit.Mac import notify_macos
+        notify_macos(msg)
+        return
+    if importlib.util.find_spec('plyer'):
+        # On Windows, use Plyer.
+        notify_plyer(msg)
+        return
+    # On Linux, use GTK Notify.
+    notify_gi(msg)
+
+
+def notify_gi(msg):
+    """Show a pop-up notification.
+
+    The Windows pygy-aio installer does not include notify, so this is just for Linux.
+    """
+    try:
+        gi.require_version('Notify', '0.7')
+    except ValueError as e:
+        logger.debug('gi.require_version("Notify", "0.7") failed: %s', e)
+        return
+    # On Ubuntu 22.10 with Python 3.10.7, this import throws warning
+    # ImportWarning: DynamicImporter.exec_module() not found; falling back to load_module()
+    with suppress_pygobject_import_warnings():
+        from gi.repository import Notify
+    if Notify.init(get_app_name()):
+        notification_obj = Notify.Notification.new(
+            get_app_name(), msg, 'bleachbit')
+        notification_obj.set_hint(
+            "desktop-entry", GLib.Variant('s', 'bleachbit'))
+        try:
+            notification_obj.show()
+        except gi.repository.GLib.GError as e:
+            logger.debug('Notify.Notification.show() failed: %s', e)
+            return
+        notification_obj.set_timeout(10000)
+
+
+def notify_plyer(msg):
+    """Show a pop-up notification.
+
+    Linux distributions do not include plyer, so this is just for Windows.
+    """
+    if not IS_WINDOWS:
+        raise RuntimeError("notify_plyer() is only for Windows")
+    from bleachbit import bleachbit_exe_path
+
+    # On Windows 10,  PNG does not work.
+    __icon_fns = (
+        os.path.normpath(os.path.join(bleachbit_exe_path,
+                                      'share\\purgebit.ico')),
+        os.path.normpath(os.path.join(bleachbit_exe_path,
+                                      'windows\\purgebit.ico')))
+
+    icon_fn = None
+    for __icon_fn in __icon_fns:
+        if os.path.exists(__icon_fn):
+            icon_fn = __icon_fn
+            break
+
+    from plyer import notification
+    notification.notify(
+        title=get_app_name(),
+        message=msg,
+        app_name=get_app_name(),  # not shown on Windows 10
+        app_icon=icon_fn,
+    )
+
+
+def threaded(func):
+    """Decoration to create a threaded function"""
+    def wrapper(*args):
+        thread = threading.Thread(target=func, args=args)
+        thread.start()
+    return wrapper

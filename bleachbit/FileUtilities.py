@@ -1,0 +1,1319 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+"""
+File-related utilities
+"""
+
+# standard imports
+import codecs
+import collections
+import configparser
+import contextlib
+import errno
+import glob
+import json
+import locale
+import logging
+import os
+import os.path
+import re
+import stat
+import subprocess
+import time
+import urllib.parse
+from pathlib import Path
+
+# local imports
+import bleachbit
+from bleachbit import IS_FREEBSD, IS_LINUX, IS_MAC, IS_POSIX, IS_WINDOWS
+from bleachbit.Language import get_text as _
+from bleachbit.PathUtils import path_equal, path_startswith
+from bleachbit.Wipe import wipe_contents, wipe_name
+
+
+logger = logging.getLogger(__name__)
+
+if IS_WINDOWS:
+    # pylint: disable=import-error, no-name-in-module
+    from pywintypes import error as pywinerror
+    import win32file
+    from win32file import GetFileAttributesW, SetFileAttributesW
+    from win32con import FILE_ATTRIBUTE_READONLY
+
+    # pylint: disable=ungrouped-imports
+    import bleachbit.Windows
+    os_path_islink = os.path.islink
+    os.path.islink = lambda path: os_path_islink(
+        path) or bleachbit.Windows.is_junction(path)
+
+else:
+    # pylint: disable-next=redefined-builtin
+    from bleachbit.General import WindowsError
+    # pylint: disable-next=invalid-name
+    pywinerror = WindowsError
+
+# DirEntry.is_junction() was added in Python 3.12. Below that, fall back to
+# bleachbit.Windows.is_junction(), which stats the path itself instead of
+# reusing the DirEntry's cached data.
+# TODO: drop this fallback once the minimum Python version is 3.12+
+_DIRENTRY_HAS_IS_JUNCTION = hasattr(os.DirEntry, 'is_junction')
+
+
+def _remove_windows_readonly(path):
+    """Clear Windows read-only attribute so deletion/wiping succeeds
+
+    Returns True if file was read-only and was cleared. Otherwise, False.
+    """
+    if not IS_WINDOWS:
+        return False
+    try:
+        # pylint: disable-next=possibly-used-before-assignment
+        attrs = GetFileAttributesW(path)
+    except pywinerror:
+        return False
+    # pylint: disable-next=possibly-used-before-assignment
+    if attrs & FILE_ATTRIBUTE_READONLY:
+        # pylint: disable-next=possibly-used-before-assignment
+        SetFileAttributesW(path, attrs & ~FILE_ATTRIBUTE_READONLY)
+        return True
+    return False
+
+
+def _delete_path(path, delete_func):
+    """
+    Delete a path with parent lock if on Windows.
+    """
+    if IS_WINDOWS:
+        return bleachbit.Windows.with_parent_lock(path, delete_func, path)
+    return delete_func(path)
+
+
+def _run_with_delete_lock(path, func):
+    """Run a function with a lock on the parent directory of pathname.
+
+    This prevents race conditions where the parent directory is deleted
+    while the function is running.
+    """
+    if IS_WINDOWS:
+        return bleachbit.Windows.with_parent_lock(path, func)
+    return func()
+
+
+def close_delete_parent_lock():
+    """Close the delete parent lock if on Windows."""
+    if IS_WINDOWS:
+        # Private helper of our own package.
+        # pylint: disable-next=protected-access
+        bleachbit.Windows._close_delete_parent_lock()
+
+
+def open_files_linux():
+    """Return iterator of open files on Linux"""
+    return glob.iglob("/proc/*/fd/*")
+
+
+FilesystemInfo = collections.namedtuple(
+    'FilesystemInfo', ['fstype', 'device', 'is_readonly', 'is_cdrom'],
+    defaults=[False])
+
+
+def get_filesystem_type(path):
+    """Get file system type from the given path
+
+    path: directory path
+
+    Return value:
+    A FilesystemInfo named tuple of (fstype, device, is_readonly, is_cdrom)
+        * fstype: vfat, ntfs, tmpfs, etc.
+        * device: C:, /dev/sda1, etc.
+        * is_readonly: True if the file system is mounted read-only.
+          On POSIX, this is from os.statvfs(), which follows firmlinks
+          and stacked mounts; on Windows, from the mount options
+          reported by psutil
+        * is_cdrom: CD-ROM or other optical disc
+
+    File system types seen
+    * On Linux: btrfs, ext4, squashfs, tmpfs, vfat
+    * On macOS: apfs
+    * On Windows: NTFS, FAT32, CDFS, unknown
+
+    When checking remote file share on Linux server, psutils may return
+        - fstype = 'unknown' for UNC path
+        - fstype = 'NTFS' for same path mapped to drive letter
+    """
+    try:
+        import psutil
+    except ImportError:
+        logger.warning(
+            'To get the file system type from the given path, you need to install psutil package')
+        return FilesystemInfo("unknown", "none", False)
+
+    path_obj = Path(path)
+    if IS_WINDOWS:
+        if len(path) == 2 and path[1] == ':':
+            path_obj = Path(path + '\\')
+
+    # Get all partitions with Path objects as keys.
+    partitions = {}
+    for partition in psutil.disk_partitions(all=False):
+        # all=True on Windows
+        # "may spin up a removable drive or go over the wire for a network one"
+        # https://github.com/giampaolo/psutil/blob/master/psutil/arch/windows/disk.c
+        mount_path = Path(partition.mountpoint)
+        mount_opts = [opt.strip().lower()
+                      for opt in partition.opts.split(',')]
+        # examples from Windows
+        # sdiskpart(device='C:\\', mountpoint='C:\\', fstype='NTFS', opts='rw,fixed')
+        # sdiskpart(device='D:\\', mountpoint='D:\\', fstype='CDFS', opts='ro,readonly,cdrom')
+        is_readonly = 'ro' in mount_opts or 'readonly' in mount_opts
+        # Windows reports 'cdrom' in opts; the fstype list covers POSIX.
+        is_cdrom = 'cdrom' in mount_opts or partition.fstype.lower() in (
+            'cdfs', 'cddafs', 'cd9660', 'iso9660', 'udf')
+        partitions[mount_path] = FilesystemInfo(
+            partition.fstype, partition.device, is_readonly, is_cdrom)
+
+    # Exact match
+    fs_info = None
+    for mount_path, fs_info_iter in partitions.items():
+        if path_obj == mount_path:
+            fs_info = fs_info_iter
+            break
+
+    # Try parent paths
+    if fs_info is None:
+        current = path_obj
+        while current.parent != current and fs_info is None:  # Stop at root
+            current = current.parent
+            for mount_path, fs_info_iter in partitions.items():
+                if current == mount_path:
+                    fs_info = fs_info_iter
+                    break
+
+    if fs_info is None:
+        fs_info = FilesystemInfo("unknown", "none", False)
+
+    if IS_POSIX:
+        # On macOS, firmlinks redirect most user paths from the sealed,
+        # read-only system volume to the read-write data volume, so the
+        # matched ancestor's mount options are wrong. os.statvfs() asks
+        # the kernel, which resolves firmlinks and stacked mounts.
+        try:
+            is_readonly = bool(os.statvfs(path).f_flag & os.ST_RDONLY)
+        except OSError:
+            # The path may not exist; keep the mount options.
+            pass
+        else:
+            fs_info = fs_info._replace(is_readonly=is_readonly)
+
+    return fs_info
+
+
+# FreeBSD lsof appends the mount device to NAME, e.g.
+# "/tmp/foo (/dev/gpt/rootfs)".
+_LSOF_DEV_SUFFIX = re.compile(r' \(/dev/[^)]+\)$')
+
+
+def open_files_lsof(run_lsof=None):
+    """Return iterator of open files using lsof"""
+    if IS_LINUX and run_lsof is None:
+        raise RuntimeError("open_files_lsof() should not be called on Linux")
+    if run_lsof is None:
+        # macOS 26 (Tahoe) has /usr/sbin/lsof
+        # FreeBSD has /usr/local/sbin/lsof
+        from bleachbit.General import resolve_exe, sanitize_root_env
+        lsof_path = resolve_exe(
+            'lsof', '/usr/sbin/lsof' if IS_MAC else '/usr/local/sbin/lsof')
+
+        def run_lsof():
+            # sanitize the env so a hostile inherited LD_*/DYLD_* cannot
+            # redirect this child when BleachBit runs as root
+            env = sanitize_root_env(dict(os.environ))
+            if IS_MAC:
+                env.pop('DYLD_LIBRARY_PATH', None)
+                env.pop('DYLD_INSERT_LIBRARIES', None)
+
+            return subprocess.check_output(
+                [lsof_path, "-Fn", "-n"], text=True,
+                env=env)
+    output = run_lsof()
+    if isinstance(output, bytes):
+        output = output.decode('utf-8', errors='replace')
+    for f in output.split("\n"):
+        if f.startswith("n/"):
+            # example: "n/dev/null"
+            name = f[1:]  # Drop lsof's "n"
+            if IS_FREEBSD:
+                # See comment above by definition of _LSOF_DEV_SUFFIX.
+                name = _LSOF_DEV_SUFFIX.sub('', name)
+            yield name
+
+
+def open_files_psutil():
+    """Return iterator of open files using psutil
+
+    FreeBSD lsof typically lists cwd and the process executable but not
+    file descriptors unless it is setgid kmem. psutil uses
+    KERN_PROC_FILEDESC, which a user can read for their own processes.
+    """
+    # pylint: disable=import-outside-toplevel
+    import psutil
+    for proc in psutil.process_iter():
+        try:
+            open_file_list = proc.open_files()
+        except (psutil.Error, OSError):
+            continue
+        for ofile in open_file_list:
+            # FreeBSD kinfo_getfile leaves an empty path for a newly
+            # created O_WRONLY file (Python's 'wb').
+            if ofile.path:
+                yield ofile.path
+
+
+def open_files_freebsd():
+    """Return iterator of open files on FreeBSD"""
+    try:
+        yield from open_files_psutil()
+    except ImportError:
+        logger.debug('psutil not available; listing open files with lsof')
+        yield from open_files_lsof()
+
+
+def open_files():
+    """Return iterator of open files"""
+    if IS_LINUX:
+        files = open_files_linux()
+    elif IS_FREEBSD:
+        files = open_files_freebsd()
+    elif IS_MAC:
+        files = open_files_lsof()
+    else:
+        raise RuntimeError('unsupported platform for open_files()')
+    for filename in files:
+        try:
+            target = os.path.realpath(filename)
+        except TypeError:
+            # happens, for example, when link points to
+            # '/etc/password\x00 (deleted)'
+            continue
+        except PermissionError:
+            # /proc/###/fd/0 with systemd
+            # https://github.com/bleachbit/bleachbit/issues/1515
+            continue
+        except FileNotFoundError:
+            # fd closed between listing and resolving it (TOCTOU race)
+            continue
+        else:
+            yield target
+
+
+class OpenFiles:
+
+    """Cached way to determine whether a file is open by active process"""
+
+    def __init__(self):
+        self.last_scan_time = None
+        self.files = set()
+
+    def file_qualifies(self, filename):
+        """Return boolean whether filename qualifies to enter cache (check \
+        against blacklist)"""
+        return not filename.startswith("/dev") and \
+            not filename.startswith("/proc")
+
+    def scan(self):
+        """Update cache"""
+        self.last_scan_time = time.time()
+        self.files = set()
+        for filename in open_files():
+            if self.file_qualifies(filename):
+                self.files.add(filename)
+
+    def is_open(self, filename):
+        """Return boolean whether filename is open by running process"""
+        if self.last_scan_time is None or (time.time() - self.last_scan_time) > 10:
+            self.scan()
+        return os.path.realpath(filename) in self.files
+
+
+_SI_PREFIXES = ('', 'k', 'M', 'G', 'T', 'P')
+_IEC_PREFIXES = ('', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi')
+
+
+def bytes_to_human(bytes_i):
+    # type: (int) -> str
+    """Display a file size in human terms (megabytes, etc.) using preferred standard (SI or IEC)"""
+
+    if bytes_i < 0:
+        return '-' + bytes_to_human(-bytes_i)
+
+    from bleachbit.Options import options
+    if options.get('units_iec'):
+        prefixes = _IEC_PREFIXES
+        base = 1024.0
+    else:
+        prefixes = _SI_PREFIXES
+        base = 1000.0
+
+    assert isinstance(bytes_i, int)
+
+    if 0 == bytes_i:
+        return '0B'
+
+    if bytes_i >= base ** 3:
+        decimals = 2
+    elif bytes_i >= base:
+        decimals = 1
+    else:
+        decimals = 0
+
+    for prefix in prefixes:
+        if bytes_i < base:
+            abbrev = round(bytes_i, decimals)
+            return locale.str(abbrev) + prefix + 'B'
+        bytes_i /= base
+    return 'A lot.'
+
+
+def _is_junction_entry(entry):
+    """Check whether a scandir entry is a Windows junction (mount point)"""
+    if _DIRENTRY_HAS_IS_JUNCTION:
+        return entry.is_junction()
+    return bleachbit.Windows.is_junction(entry.path)
+
+
+def _scan_children(top, list_directories, pending_dirs):
+    """Yield files under `top`, descending into real subdirectories.
+
+    Symlinks and, on Windows, junctions are not descended into. When
+    list_directories is set, every directory found (including those links)
+    is collected into pending_dirs to be emitted after its contents.
+
+    Using os.scandir directly lets us reuse each entry's cached type instead
+    of re-stat'ing every subdirectory to test for links, as os.walk required.
+    The stack is explicit rather than recursive so that a deeply nested tree
+    cannot exhaust the interpreter's recursion limit.
+    """
+    stack = [top]
+    while stack:
+        try:
+            scandir_it = os.scandir(stack.pop())
+        except OSError:
+            continue
+        subdirs = []
+        try:
+            with scandir_it:
+                for entry in scandir_it:
+                    try:
+                        is_dir = entry.is_dir()
+                    except OSError:
+                        # e.g. permission denied; os.walk also treats this as a file
+                        is_dir = False
+                    if not is_dir:
+                        # regular file, symlink to a file, or broken link
+                        yield entry.path
+                        continue
+                    try:
+                        # is_junction_entry() is Windows-only and never reached on
+                        # POSIX thanks to short-circuit evaluation.
+                        is_link = entry.is_symlink() or (
+                            IS_WINDOWS and _is_junction_entry(entry))
+                    except OSError:
+                        is_link = False
+                    if list_directories:
+                        pending_dirs.append(entry.path)
+                    if not is_link:
+                        subdirs.append(entry.path)
+        except OSError:
+            # The directory may disappear or become unreadable mid-iteration.
+            # os.walk silently skips such directories, so do the same instead of
+            # propagating PermissionError and aborting the whole cleanup.
+            continue
+        # Reversed so siblings are visited in the order scandir returned them
+        stack.extend(reversed(subdirs))
+
+
+def children_in_directory(top, list_directories=False):
+    """Iterate files and, optionally, subdirectories in directory
+
+    Directories are returned after children to avoid trying to delete
+    a non-empty directory. Symlinks and Windows junctions are never
+    traversed.
+    """
+    if isinstance(top, tuple):
+        for top_ in top:
+            yield from children_in_directory(top_, list_directories)
+        return
+
+    pending_dirs = [] if list_directories else None
+    yield from _scan_children(top, list_directories, pending_dirs)
+
+    if list_directories:
+        pending_dirs.sort(key=len)
+        while pending_dirs:
+            yield pending_dirs.pop()
+
+
+def _open_nofollow_fd(path, flags, mode=0o600):
+    """Open path with os.open(), refusing a symlink (or Windows junction).
+
+    Adds O_NOFOLLOW to flags on POSIX so a symlink raced in after the
+    islink() check is also refused, instead of redirecting the open to
+    its target. Windows has no O_NOFOLLOW; the islink() check is the
+    only protection there. Returns a raw file descriptor.
+    """
+    if os.path.islink(path):
+        raise OSError(errno.EACCES, 'refusing to open a link', path)
+    if hasattr(os, 'O_NOFOLLOW'):
+        flags |= os.O_NOFOLLOW
+    return os.open(path, flags, mode)
+
+
+def open_for_overwrite(path, mode='w', **kwargs):
+    """Open path for overwriting without following a final symlink."""
+    if not hasattr(os, 'O_NOFOLLOW'):
+        # Windows gains nothing from os.open() here, and O_TRUNC would empty
+        # the file before a write error could be reported, losing the old
+        # contents. islink() (which also catches junctions) is the only
+        # protection available either way.
+        if os.path.islink(path):
+            raise OSError(errno.EACCES, 'refusing to open a link', path)
+        # encoding comes via **kwargs (e.g. utf-8-sig); don't hardcode it.
+        # pylint: disable-next=unspecified-encoding
+        return open(path, mode, **kwargs)
+    fd = _open_nofollow_fd(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    try:
+        # pylint: disable-next=unspecified-encoding
+        return open(fd, mode, **kwargs)
+    except Exception:
+        os.close(fd)
+        raise
+
+
+def clean_ini(path, section, parameter):
+    """Delete sections and parameters (aka option) in the file
+
+    Comments are not preserved.
+
+    The file is expected to be UTF-8, optionally with a BOM. This matches
+    how VLC writes its configuration file (verified for over a decade). If
+    the file cannot be decoded as UTF-8, it is left untouched and an error
+    is logged so cleaning continues with the next file. The presence (or
+    absence) of a BOM is preserved on write.
+    """
+    # utf_8_sig transparently strips a BOM when reading, if present.
+    read_encoding = 'utf_8_sig'
+
+    # read file to parser
+    config = configparser.RawConfigParser(delimiters='=')
+    config.optionxform = str
+    try:
+        with open(path, 'r', encoding=read_encoding) as fp:
+            config.read_file(fp)
+    except UnicodeDecodeError:
+        logger.error(
+            "Cannot clean INI file because it is not valid UTF-8: %s", path)
+        return
+
+    # change file
+    changed = False
+    if config.has_section(section):
+        if parameter is None:
+            changed = True
+            config.remove_section(section)
+        elif config.has_option(section, parameter):
+            changed = True
+            config.remove_option(section, parameter)
+
+    if not changed:
+        return
+
+    # Preserve whether the file had a BOM: write with utf_8_sig (which
+    # re-adds it) only if the original file began with the UTF-8 BOM.
+    with open(path, 'rb') as bom_fp:
+        has_bom = bom_fp.read(3) == b'\xef\xbb\xbf'
+    write_encoding = 'utf_8_sig' if has_bom else 'utf_8'
+
+    # write file
+    from bleachbit.Options import options
+    if options.get('shred'):
+        delete(path, True)
+    with open_for_overwrite(path, encoding=write_encoding, newline='') as fp:
+        config.write(fp)
+
+
+def clean_json(path, target):
+    """Delete key in the JSON file"""
+    changed = False
+    targets = target.split('/')
+
+    # read file to parser
+    with open(path, 'r', encoding='utf-8-sig') as f:
+        js = json.load(f)
+
+    # change file
+    pos = js
+    while True:
+        new_target = targets.pop(0)
+        if not isinstance(pos, dict):
+            break
+        if new_target in pos and targets:
+            # descend
+            pos = pos[new_target]
+        elif new_target in pos:
+            # delete terminal target
+            changed = True
+            del pos[new_target]
+        else:
+            # target not found
+            break
+        if not targets:
+            # target not found
+            break
+
+    if changed:
+        from bleachbit.Options import options
+        if options.get('shred'):
+            delete(path, True)
+        # write file
+        with open_for_overwrite(path, encoding='utf-8') as f:
+            json.dump(js, f)
+
+
+def _truncate_locked_file(path):
+    """Best-effort truncate of a file, used on Windows when a lock prevents deletion.
+
+    Returns True if truncation succeeded, False otherwise.
+    Shared locks allow truncation, exclusive locks prevent it.
+    """
+    if os.path.islink(path):
+        logger.debug("refusing to truncate a link: %s", path)
+        return False
+    try:
+        with open(path, 'r+b') as handle:
+            handle.truncate(0)
+        return True
+    except (OSError, PermissionError):
+        logger.debug("Unable to truncate locked file %s", path)
+        return False
+
+
+def _delete_file_impl(path, shred):
+    """"Delete a file
+
+    - File must exist.
+    - Not for use with directories.
+    - Does not check the user's preferences.
+
+    Returns True.
+    """
+    # wipe contents
+    if shred and not is_hard_link(path):
+        try:
+            wipe_contents(path)
+        except pywinerror as e:
+            # 2 = The system cannot find the file specified.
+            # This can happen with a broken symlink
+            # https://github.com/bleachbit/bleachbit/issues/195
+            if 2 != e.winerror:
+                raise
+            # If a broken symlink, try os.remove() below.
+        except IOError as e:
+            # permission denied (13) happens shredding MSIE 8 on Windows 7
+            logger.debug("IOError #%s shredding '%s'",
+                         e.errno, path)
+    if shred:
+        # wipe name
+        os.remove(wipe_name(path))
+        return True
+    # Code below is shred == False
+    try:
+        os.remove(path)
+    except PermissionError as e:
+        if IS_WINDOWS and hasattr(e, 'winerror'):
+            if e.winerror == 32:
+                # File is locked, try to truncate it first
+                _truncate_locked_file(path)
+                # Command.py watches for this exception.
+                raise WindowsError(e.errno, e.strerror,
+                                   e.filename, e.winerror) from e
+            if e.errno == errno.EACCES and e.winerror == 5 and \
+                    _remove_windows_readonly(path):
+                # If read-only attribute was removed, try again.
+                os.remove(path)
+                return True
+        raise
+    except WindowsError as e:
+        if e.winerror == 32:
+            # File is locked, try to truncate it first
+            _truncate_locked_file(path)
+        raise
+    return True
+
+
+def delete_file(path, shred):
+    return _run_with_delete_lock(
+        path, lambda: _delete_file_impl(path, shred))
+
+
+def truncate_file(path):
+    """Truncate a file to zero length.
+
+    Runs under the same parent lock as delete() and refuses a symlink
+    (or Windows reparse point) so the truncation is not redirected
+    through a link to another file.
+    """
+    def _truncate():
+        # No O_CREAT: if the file went away, do not recreate it as an empty one
+        os.close(_open_nofollow_fd(path, os.O_WRONLY | os.O_TRUNC))
+
+    _run_with_delete_lock(path, _truncate)
+
+
+def _file_type(path):
+    """Return the file type bits of path, or None if it is missing
+
+    On Windows only the type bits are set, and 0 means a type delete()
+    does not handle.
+    """
+    if IS_POSIX:
+        try:
+            return os.lstat(path).st_mode
+        except (OSError, ValueError):
+            return None
+    # os.lstat() returns Access Denied on some Windows files that the
+    # native os.path checks can still see
+    if not os.path.lexists(path):
+        return None
+    try:
+        attrs = os.lstat(path).st_file_attributes
+    except OSError:
+        attrs = 0
+    # A junction/symlink's contents belong to the target, not
+    # this path; isdir() would follow it and judge the target's
+    # emptiness instead of removing the reparse point itself.
+    if attrs & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+        return stat.S_IFLNK
+    if os.path.isdir(path):
+        return stat.S_IFDIR
+    if os.path.isfile(path):
+        return stat.S_IFREG
+    if os.path.islink(path):
+        return stat.S_IFLNK
+    return 0
+
+
+def delete(path, shred=False, ignore_missing=False, allow_shred=True):
+    """Delete path that is either file, directory, link or FIFO.
+
+       If shred is enabled as a function parameter or the BleachBit global
+       parameter, the path will be shredded unless allow_shred = False.
+
+       All links are removed without following the link. This includes:
+       * Linux symlink
+       * Windows symlink (soft link)
+       * Windows hard link
+       * Windows junction
+       * Windows .lnk files
+
+       Returns True if the path was deleted, False otherwise.
+    """
+    from bleachbit.Options import options
+    path = extended_path(path)
+    do_shred = allow_shred and (shred or options.get('shred'))
+    mode = _file_type(path)
+    if mode is None:
+        if ignore_missing:
+            return False
+        raise OSError(2, 'No such file or directory', path)
+    if stat.S_ISLNK(mode) or stat.S_ISFIFO(mode):
+        _delete_path(path, os.remove)
+        return True
+    if stat.S_ISDIR(mode):
+        delpath = path
+        # TRANSLATORS: Log message where %s is the pathname.
+        not_empty_msg = _("Directory is not empty: %s")
+        if do_shred:
+            if not is_dir_empty(path):
+                # Avoid renaming non-empty directory like
+                # https://github.com/bleachbit/bleachbit/issues/783
+                logger.info(not_empty_msg, path)
+                return False
+            delpath = wipe_name(path)
+        try:
+            _delete_path(delpath, os.rmdir)
+        except OSError as e:
+            # [Errno 39] Directory not empty
+            # https://bugs.launchpad.net/bleachbit/+bug/1012930
+            if errno.ENOTEMPTY == e.errno:
+                logger.info(not_empty_msg, path)
+                return False
+            if errno.EBUSY == e.errno:
+                if IS_POSIX and os.path.ismount(path):
+                    # TRANSLATORS: Log message where %s is the pathname.
+                    logger.info(_("Skipping mount point: %s"), path)
+                else:
+                    # TRANSLATORS: Log message where %s is the pathname.
+                    logger.info(_("Device or resource is busy: %s"), path)
+                return False
+            if IS_WINDOWS and errno.EACCES == e.errno:
+                # On Windows, read-only directories cause Access Denied
+                if _remove_windows_readonly(delpath):
+                    _delete_path(delpath, os.rmdir)
+                else:
+                    raise
+            else:
+                raise
+        except WindowsError as e:
+            # WindowsError: [Error 145] The directory is not empty:
+            # 'C:\\Documents and Settings\\username\\Local Settings\\Temp\\NAILogs'
+            # Error 145 may happen if the files are scheduled for deletion
+            # during reboot.
+            if 145 == e.winerror:
+                logger.info(not_empty_msg, path)
+                return False
+            raise
+        return True
+    if stat.S_ISREG(mode):
+        delete_file(path, do_shred)
+        return True
+    # TRANSLATORS: Log message where %s is the pathname.
+    logger.info(_("Special file type cannot be deleted: %s"), path)
+    return False
+
+
+def detect_encoding(fn):
+    """Detect the encoding of the file
+
+    Returns a codec name or None if it could not be determined.
+    """
+    with open(fn, 'rb') as f:
+        raw = f.read()
+
+    # UTF-8 is unambiguous, so do not guess. This covers ASCII and what
+    # current applications write, such as VLC since 3.0.
+    encoding = 'utf_8_sig' if raw.startswith(codecs.BOM_UTF8) else 'utf_8'
+    try:
+        raw.decode(encoding)
+    except UnicodeDecodeError:
+        pass
+    else:
+        return encoding
+
+    try:
+        # pylint: disable=import-outside-toplevel
+        from charset_normalizer import from_bytes
+    except ImportError:
+        logger.warning(
+            'charset_normalizer module is not available to detect character encoding')
+        return None
+
+    match = from_bytes(raw).best()
+    if match is None:
+        return None
+    if match.bom and 'utf_8' == match.encoding:
+        # charset_normalizer reports the BOM separately from the codec
+        return 'utf_8_sig'
+    return match.encoding
+
+
+def ego_owner(filename):
+    """Return whether current user owns the file
+
+    Returns False if the file is gone or unreadable, so callers walking a
+    busy directory such as /tmp do not abort on a vanished file.
+
+    POSIX only"""
+    assert IS_POSIX
+    try:
+        st_uid = os.lstat(filename).st_uid
+    except OSError:
+        return False
+    # pylint: disable=no-member
+    return st_uid == os.getuid()
+
+
+def exists_in_path(filename):
+    """Returns boolean whether the filename exists in the path"""
+    path_env = os.getenv('PATH')
+    if not path_env:
+        return False
+    assert not os.path.isabs(filename)
+    for dirname in path_env.split(os.pathsep):
+        if os.path.exists(os.path.join(dirname, filename)):
+            return True
+    return False
+
+
+def exe_exists(pathname):
+    """Returns boolean whether executable exists"""
+    if os.path.isabs(pathname):
+        return os.path.exists(pathname)
+    return exists_in_path(pathname)
+
+
+def execute_sqlite3(path, cmds):
+    """Execute SQL commands on SQLite database
+
+    Args:
+        path (str): Path to the SQLite database file
+        cmds (str): SQL commands to execute, separated by semicolons
+
+    Raises:
+        sqlite3.OperationalError: If there's an error executing the SQL commands
+        sqlite3.DatabaseError: If there's a database-related error
+
+    Returns:
+        None
+    """
+    from bleachbit.Options import options
+    # In FreeBSD, sqlite3 is a separate package
+    import sqlite3
+    assert isinstance(path, str)
+    assert isinstance(cmds, str)
+    try:
+        conn = sqlite3.connect(path)
+    except sqlite3.OperationalError as exc:
+        # sqlite3 raises a cryptic "unable to open database file" for a
+        # variety of causes (permission denied, read-only parent directory,
+        # locked file, ...). Translate it into the same OSError(EACCES)
+        # "Access denied" message users already see for locked files, or
+        # FileNotFoundError if the path is gone, so the Worker can surface a
+        # clean summary instead of an opaque traceback.
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                errno.ENOENT, "File not found when opening SQLite database",
+                path) from exc
+        raise OSError(
+            errno.EACCES,
+            "Access denied when opening SQLite database", path) from exc
+    with contextlib.closing(conn) as conn:
+        # overwrites deleted content with zeros
+        # https://www.sqlite.org/pragma.html#pragma_secure_delete
+        if options.get('shred'):
+            conn.execute('PRAGMA secure_delete=ON')
+            # Without this, shredding can leave freed content recoverable.
+            if conn.execute('PRAGMA secure_delete').fetchone()[0] != 1:
+                raise RuntimeError(f'could not enable secure_delete on {path}')
+
+        for cmd in cmds.split(';'):
+            try:
+                conn.execute(cmd)
+            except sqlite3.OperationalError as exc:
+                if str(exc).find('no such function: ') >= 0:
+                    # fixme: determine why randomblob and zeroblob are not
+                    # available
+                    logger.exception(str(exc))
+                else:
+                    raise sqlite3.OperationalError(f'{exc}: {path}')
+            except sqlite3.DatabaseError as exc:
+                raise sqlite3.DatabaseError(f'{exc}: {path}')
+
+        conn.commit()
+
+    bleachbit.General.gc_collect()
+
+
+def expand_glob_join(pathname1, pathname2):
+    """Join pathname1 and pathname1, expand pathname, glob, and return as list"""
+    pathname3 = os.path.expanduser(os.path.expandvars(
+        os.path.join(pathname1, pathname2)))
+    return list(glob.iglob(pathname3))
+
+
+def extended_path(path):
+    r"""Return the extended Windows pathname
+
+    example: c:\foo\bar.txt to \\?\c:\foo\bar.txt
+
+    The path is returned unchanged if:
+    * Path was already extended
+    * Path is a sysnative path
+    * System is not Windows
+    """
+    # Do not extend the Sysnative paths because on some systems there are
+    # problems with path resolution. For example:
+    # https://github.com/bleachbit/bleachbit/issues/1574.
+    if IS_WINDOWS and 'Sysnative' not in path.split(os.sep):
+        if path.startswith(r'\\?'):
+            return path
+        if path.startswith(r'\\'):
+            return '\\\\?\\unc\\' + path[2:]
+        return '\\\\?\\' + path
+    return path
+
+
+def extended_path_undo(path):
+    r"""Undo extended path
+
+    For example: \\c:\foo\bar.txt -> c:\foo\bar.txt
+    """
+    if IS_WINDOWS:
+        if path.startswith(r'\\?\unc'):
+            return '\\' + path[7:]
+        if path.startswith(r'\\?'):
+            return path[4:]
+    return path
+
+
+def free_space(pathname):
+    """Return free space in bytes
+
+    pathname may be any directory within a valid file system.
+
+    POSIX systems may reserve space for the root user, and this function
+    returns the amount available to the current user for accurate
+    estimation of completion time in wipe_path().
+    """
+    if IS_WINDOWS:
+        # pylint: disable=import-error
+        import psutil
+        return psutil.disk_usage(pathname).free
+    assert IS_POSIX
+    # pylint: disable=no-member
+    mystat = os.statvfs(pathname)
+    if os.getuid() == 0:
+        # root
+        return mystat.f_bfree * mystat.f_bsize
+    # non-root
+    return mystat.f_bavail * mystat.f_bsize
+
+
+def getsize(path):
+    """Return the actual file size considering spare files
+       and symlinks"""
+    if IS_POSIX:
+        try:
+            __stat = os.lstat(path)
+        except OSError as e:
+            # OSError: [Errno 13] Permission denied
+            # can happen when a regular user is trying to find the size of /var/log/hp/tmp
+            # where /var/log/hp is 0774 and /var/log/hp/tmp is 1774
+            if errno.EACCES == e.errno:
+                return 0
+            raise
+        return __stat.st_blocks * 512
+    if IS_WINDOWS:
+        # On rare files os.path.getsize() returns access denied, so first
+        # try FindFilesW.
+        # Also, apply prefix to use extended-length paths to support longer
+        # filenames.
+        try:
+            # pylint: disable=c-extension-no-member
+            finddata = win32file.FindFilesW(extended_path(path))
+        except pywinerror as e:
+            if e.winerror == 3:  # 3 = The system cannot find the path specified.
+                raise OSError(errno.ENOENT, e.strerror, path) from e
+            raise e
+        if not finddata:
+            # FindFilesW does not work for directories, so fall back to
+            # getsize()
+            return os.path.getsize(path)
+        return (finddata[0][4] * (0xffffffff + 1)) + finddata[0][5]
+    return os.path.getsize(path)
+
+
+def getsizedir(path):
+    """Return the size of the contents of a directory"""
+    total_bytes = 0
+    for node in children_in_directory(path, list_directories=False):
+        try:
+            total_bytes += getsize(node)
+        except FileNotFoundError:
+            # A file may vanish between the walk and the measurement, as when
+            # a package manager writes to the cache directory being measured
+            pass
+    return total_bytes
+
+
+def globex(pathname, regex):
+    """Yield a list of files with pathname and filter by regex"""
+    if isinstance(pathname, tuple):
+        for singleglob in pathname:
+            yield from globex(singleglob, regex)
+    else:
+        for path in glob.iglob(pathname):
+            if re.search(regex, path):
+                yield path
+
+
+def guess_overwrite_paths():
+    """Guess which partitions to overwrite (to hide deleted files)"""
+    # In case overwriting leaves large files, placing them in
+    # ~/.config makes it easy to find them and clean them.
+    ret = []
+    if IS_POSIX:
+        home = os.path.expanduser('~/.cache')
+        if not os.path.exists(home):
+            home = os.path.expanduser("~")
+        ret.append(home)
+        # Debian on Docker did not have /tmp
+        if os.path.exists('/tmp'):
+            if not same_partition(home, '/tmp/'):
+                ret.append('/tmp')
+    elif IS_WINDOWS:
+        localtmp = os.path.expandvars('$TMP')
+        if not os.path.exists(localtmp):
+            logger.warning(
+                # TRANSLATORS: This is a warning log message. %s is the directory path.
+                _("The environment variable TMP refers to a directory that does not exist: %s"), localtmp)
+            localtmp = None
+        for drive in bleachbit.Windows.get_fixed_drives():
+            if localtmp and same_partition(localtmp, drive):
+                ret.append(localtmp)
+            else:
+                ret.append(drive)
+    else:
+        raise NotImplementedError('Unsupported OS in guess_overwrite_paths')
+    return ret
+
+
+def human_to_bytes(human, hformat='si'):
+    """Convert a string like 10.2GB into bytes.  By
+    default use SI standard (base 10).  The format of the
+    GNU command 'du' (base 2) also supported."""
+
+    if 'si' == hformat:
+        base = 1000
+        suffixes = 'kMGTPE'
+    elif 'du' == hformat:
+        base = 1024
+        suffixes = 'KMGTPE'
+    else:
+        raise ValueError(f"Invalid format: '{hformat}'")
+    matches = re.match(r'^(\d+(?:\.\d+)?) ?([' + suffixes + ']?)B?$', human)
+    if matches is None:
+        raise ValueError(f"Invalid input for '{human}' (hformat='{hformat}')")
+    (amount, suffix) = matches.groups()
+
+    if '' == suffix:
+        exponent = 0
+    else:
+        exponent = suffixes.find(suffix) + 1
+    return int(float(amount) * base**exponent)
+
+
+def is_dir_empty(dirname):
+    """Returns boolean whether directory is empty.
+
+    It assumes the path exists and is a directory.
+    """
+    with os.scandir(dirname) as it:
+        for _entry in it:
+            return False
+    return True
+
+
+def is_hard_link(path):
+    """Check if a file is a hard link."""
+    return os.path.isfile(path) and os.stat(path).st_nlink > 1
+
+
+def is_normal_directory(path):
+    """Check whether path is a non-link directory
+
+    Returns False if:
+        - path does not exist
+        - path is a file
+        - path is a reparse point
+    Returns True if a normal directory
+    """
+
+    try:
+        st = os.stat(path, follow_symlinks=False)
+        is_dir = stat.S_ISDIR(st.st_mode)
+        is_reparse = getattr(st, 'st_reparse_tag', 0) != 0
+        return is_dir and not is_reparse
+    except (OSError, ValueError):
+        return False
+
+
+def listdir(directory):
+    """Return full path of files in directory.
+
+    Path may be a tuple of directories."""
+
+    if isinstance(directory, tuple):
+        for dirname in directory:
+            yield from listdir(dirname)
+        return
+    dirname = os.path.expanduser(directory)
+    if not os.path.lexists(dirname):
+        return
+    for filename in os.listdir(dirname):
+        yield os.path.join(dirname, filename)
+
+
+def same_partition(dir1, dir2):
+    """Are both directories on the same partition?"""
+    if IS_WINDOWS:
+        try:
+            return free_space(dir1) == free_space(dir2)
+        except OSError as e:
+            # psutil.disk_usage() raises OSError (with .winerror on Windows).
+            # 5 = access denied: Microsoft Office 2010 Starter Edition has a
+            #     virtual drive that gives access denied.
+            #     https://bugs.launchpad.net/bleachbit/+bug/1372179
+            #     https://bugs.launchpad.net/bleachbit/+bug/1474848
+            #     https://github.com/az0/bleachbit/issues/27
+            # 1326 = logon failure: disconnected network drive.
+            if getattr(e, 'winerror', None) in (5, 1326):
+                return dir1[0] == dir2[0]
+            raise
+    # pylint: disable=no-member
+    stat1 = os.statvfs(dir1)
+    stat2 = os.statvfs(dir2)
+    return stat1[stat.ST_DEV] == stat2[stat.ST_DEV]
+
+
+def truncate_f(f):
+    """Truncate the file object"""
+    try:
+        f.truncate(0)
+        f.flush()
+        os.fsync(f.fileno())
+    except OSError as e:
+        if e.errno != errno.ENOSPC:
+            raise
+
+
+def uris_to_paths(file_uris):
+    """Return a list of paths from text/uri-list"""
+    assert isinstance(file_uris, (tuple, list))
+    # Keep urllib.request off the startup path: it drags in ssl and socket.
+    from urllib.request import url2pathname  # pylint: disable=import-outside-toplevel
+    file_paths = []
+    for file_uri in file_uris:
+        if not file_uri:
+            # ignore blank
+            continue
+        parsed_uri = urllib.parse.urlparse(file_uri)
+        if parsed_uri.scheme == 'file':
+            file_path = url2pathname(parsed_uri.path)
+            if len(file_path) > 2 and file_path[2] == ':':
+                # remove front slash for Windows-style path
+                file_path = file_path[1:]
+            if not file_path:
+                # An empty path (e.g. from "file://") would resolve to the
+                # current working directory downstream via os.path.abspath('')
+                # in create_simple_cleaner.
+                logger.warning('Skipping malformed file URI: %s', file_uri)
+                continue
+            file_paths.append(file_path)
+        else:
+            logger.warning('Unsupported scheme: %s', file_uri)
+    return file_paths
+
+
+def _is_system_critical_posix(path):
+    """Check whether a POSIX path is system-critical and must never be deleted.
+
+    Applies even when the keep list is empty, so a bad cleaner file cannot
+    delete the filesystem root or a mounted pseudo-filesystem. Real cleaners
+    legitimately act under /var and /dev/shm, so only the root itself and
+    virtual filesystems are off limits.
+    """
+    if not isinstance(path, str) or not path.startswith('/'):
+        return False
+    # Strip leading slashes: POSIX leaves '//' and friends implementation-
+    # defined, so normpath alone will not collapse them to '/'.
+    norm = os.path.normpath('/' + path.lstrip('/'))
+    if norm == '/':
+        return True
+    for prefix in ('/proc', '/sys', '/run'):
+        if norm == prefix or path_startswith(norm, prefix):
+            return True
+    return False
+
+
+def whitelisted_posix(path, check_realpath=True, _followed_link=False):
+    """Check whether this POSIX path is whitelisted"""
+    if _is_system_critical_posix(path):
+        return True
+    from bleachbit.Options import options
+    keep_paths = options.get_whitelist_paths()
+    if not keep_paths:
+        return False
+    if check_realpath and os.path.islink(path):
+        # also check the link name
+        if whitelisted_posix(path, False):
+            return True
+        # resolve symlink
+        return whitelisted_posix(os.path.realpath(path), False, _followed_link=True)
+    for (keep_type, keep_path) in keep_paths:
+        if keep_type == 'file':
+            if path_equal(path, keep_path):
+                return True
+            if _followed_link and path_equal(path, os.path.realpath(keep_path)):
+                return True
+        if keep_type == 'folder':
+            if path_equal(path, keep_path):
+                return True
+            if path_startswith(path, keep_path):
+                return True
+            if _followed_link:
+                real_pathname = os.path.realpath(keep_path)
+                if path_equal(path, real_pathname) or path_startswith(path, real_pathname):
+                    return True
+    return False
+
+
+_WINDIR_TEMP = os.path.expandvars(r'%windir%\temp').lower()
+
+
+def _windows_preserved_temp_dir(path):
+    """Return whether this Windows path is a temp directory root to keep."""
+    path = extended_path_undo(os.path.normpath(path)).lower()
+    parts = path.split(os.sep)
+
+    if path == _WINDIR_TEMP:
+        return True
+
+    if len(parts) >= 3 and parts[-3:] == ['appdata', 'local', 'temp']:
+        return True
+
+    if len(parts) >= 2 and parts[-2:] == ['local settings', 'temp']:
+        return True
+
+    return False
+
+
+def whitelisted_windows(path):
+    """Check whether this Windows path is whitelisted"""
+    if not isinstance(path, str):
+        raise TypeError(f"Expected str, got {type(path)}")
+    if _windows_preserved_temp_dir(path):
+        return True
+    from bleachbit.Options import options
+    for pathname in options.get_whitelist_paths():
+        # Windows is case insensitive
+        if (pathname[0] == 'file'
+                and path_equal(path, pathname[1], case_sensitive=False)):
+            return True
+        if pathname[0] == 'folder':
+            if path_equal(path, pathname[1], case_sensitive=False):
+                return True
+            if path_startswith(path, pathname[1], case_sensitive=False):
+                return True
+            # Simple drive letter like C:\ matches everything below
+            if (len(pathname[1]) == 3
+                    and path.lower().startswith(pathname[1].lower())):
+                return True
+    return False
+
+
+if IS_WINDOWS:
+    whitelisted = whitelisted_windows
+else:
+    whitelisted = whitelisted_posix
+
+
+def vacuum_sqlite3(path):
+    """Vacuum SQLite database"""
+    execute_sqlite3(path, 'vacuum')
+
+
+openfiles = OpenFiles()

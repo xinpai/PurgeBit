@@ -1,0 +1,777 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+
+"""
+Common code for unit tests
+"""
+
+# These tests reach into internals on purpose.
+# pylint: disable=protected-access
+
+import contextlib
+import os
+import re
+import shutil
+import sys
+import tempfile
+import time
+import unittest
+import warnings
+from pathlib import Path
+from unittest import mock
+
+import psutil
+
+try:
+    # pytest is re-exported for the test modules.
+    # pylint: disable-next=unused-import
+    import pytest
+except ImportError:  # pytest is optional for plain unittest discovery
+    class _MarkShimMeta(type):
+        """Metaclass so any @pytest.mark.<name> is a no-op decorator.
+
+        Supports both forms: ``@pytest.mark.foo`` (no parens) and
+        ``@pytest.mark.foo(...)`` (with parens).
+        """
+        def __getattr__(cls, _name):
+            # func is positional so the shim works with and without parentheses.
+            # pylint: disable-next=keyword-arg-before-vararg
+            def decorator(func=None, *_args, **_kwargs):
+                if callable(func):
+                    # Used as @pytest.mark.foo without parentheses.
+                    return func
+                # Used as @pytest.mark.foo(...) with parentheses.
+                return lambda f: f
+            return decorator
+
+    class _PytestShim:
+        """No-op stand-in so @pytest.mark.* decorators work under unittest."""
+        class mark(metaclass=_MarkShimMeta):
+            pass
+    pytest = _PytestShim()
+
+import bleachbit
+from bleachbit import logger
+
+import bleachbit.Options
+from bleachbit.Bootstrap import bootstrap
+from bleachbit.GtkShim import ignore_pygobject_asyncio_warnings
+from bleachbit.FileUtilities import (
+    children_in_directory,
+    extended_path,
+    get_filesystem_type,
+    is_hard_link,
+    is_normal_directory,
+)
+from bleachbit.General import gc_collect, sudo_mode
+
+if bleachbit.IS_WINDOWS:
+    import winreg
+    import win32gui
+    # pylint: disable-next=ungrouped-imports
+    from bleachbit import Windows
+
+# /etc/locale.alias may list the qaa-qtz range, which is reserved for
+# private use rather than a concrete locale. Skip it if present.
+SKIP_ALIAS_CODES = {'qaa-qtz', 'it_CARES'}
+
+
+def _supports_stdout_char(char: str) -> bool:
+    """Return True if sys.stdout can encode the given character."""
+    encoding = (
+        getattr(bleachbit, 'stdout_encoding', None)
+        or getattr(sys.stdout, 'encoding', None)
+        or sys.getdefaultencoding()
+    )
+    try:
+        char.encode(encoding)
+    except (UnicodeEncodeError, LookupError):
+        return False
+    return True
+
+
+@contextlib.contextmanager
+def mock_missing_package(*package_names, clear_prefixes=()):
+    """Context manager that simulates missing optional packages.
+
+    Saves and restores sys.modules around the block.  Removes all
+    modules matching any of *package_names* or *clear_prefixes* from
+    sys.modules, then patches each package_name as None to prevent
+    re-import.
+
+    Args:
+        *package_names: Package names to make unavailable
+            (e.g. 'requests', 'psutil').  These are both evicted from
+            sys.modules and patched as None.
+        clear_prefixes: Additional module prefixes to evict from
+            sys.modules (e.g. 'bleachbit.Network') so they are
+            re-imported inside the block.  Not patched as None.
+    """
+    saved_modules = dict(sys.modules)
+    all_prefixes = list(package_names) + list(clear_prefixes)
+    for mod in list(sys.modules.keys()):
+        if any(mod.startswith(p) for p in all_prefixes):
+            del sys.modules[mod]
+    try:
+        patch_dict = {name: None for name in package_names}
+        with mock.patch.dict('sys.modules', patch_dict):
+            yield
+    finally:
+        for mod in list(sys.modules.keys()):
+            if mod not in saved_modules:
+                del sys.modules[mod]
+        for mod, mod_obj in saved_modules.items():
+            if mod not in sys.modules:
+                sys.modules[mod] = mod_obj
+        # Re-importing a submodule also rebinds it as an attribute on its
+        # parent package (e.g. bleachbit.Network on the bleachbit package).
+        # sys.modules restore alone leaves that attribute stale, so a later
+        # mock.patch('bleachbit.Network...') would hit the orphaned module.
+        for mod, mod_obj in saved_modules.items():
+            if '.' not in mod:
+                continue
+            parent_name, _, attr = mod.rpartition('.')
+            parent = sys.modules.get(parent_name)
+            if parent is not None and getattr(parent, attr, None) is not mod_obj:
+                setattr(parent, attr, mod_obj)
+
+
+@contextlib.contextmanager
+def capture_glib_exceptions():
+    """Capture exceptions swallowed by GLib virtual method/signal handlers.
+
+    PyGObject catches exceptions raised inside GObject virtual method
+    overrides (e.g. ``do_activate``) and signal callbacks, then logs them
+    via ``sys.excepthook`` without propagating to the Python caller.  This
+    context manager installs a custom ``sys.excepthook`` that collects such
+    exceptions so they can be re-raised after GTK event processing.
+
+    Yields a list of ``(exc_type, exc_value, exc_tb)`` tuples.
+    """
+    captured = []
+    original_excepthook = sys.excepthook
+
+    def _capturing_excepthook(exc_type, exc_value, exc_tb):
+        captured.append((exc_type, exc_value, exc_tb))
+        original_excepthook(exc_type, exc_value, exc_tb)
+
+    sys.excepthook = _capturing_excepthook
+    try:
+        yield captured
+    finally:
+        sys.excepthook = original_excepthook
+
+
+@contextlib.contextmanager
+def set_temporary_env(env_var, env_value):
+    """
+    Temporarily overrides an environment variable.
+    """
+    # Save the original value so we can restore it later
+    original_value = os.environ.get(env_var)
+
+    if env_value is None:
+        os.environ.pop(env_var, None)
+    else:
+        os.environ[env_var] = str(env_value)
+    try:
+        yield
+    finally:
+        # Restore the original state
+        if original_value is None:
+            # If the environment variable wasn't set originally, remove it
+            os.environ.pop(env_var, None)
+        else:
+            os.environ[env_var] = original_value
+
+
+def get_volatile_dir():
+    """Return the volatile system temporary directory for TOCTOU tolerance.
+
+    Use tempfile.gettempdir() instead of a hardcoded '/tmp' (POSIX) or
+    '%temp%' (Windows) so custom TMPDIR/TMP/TEMP environments work.
+    gettempdir() prefers TMP over TEMP on Windows while winapp '%Temp%'
+    expands to TEMP, but conftest.py sets both identically, so the
+    difference is theoretical.
+    """
+    volatile_dir = tempfile.gettempdir().rstrip('/\\')
+    if not volatile_dir:
+        # TMPDIR=/ would rstrip to an empty prefix that matches every path
+        volatile_dir = os.sep
+    return volatile_dir
+
+
+def cdrom_mountpoints():
+    """Return mountpoints of mounted CD-ROM drives (real or virtual).
+
+    Only read-only mounts are returned, so tests never write to media
+    that might be writable (e.g., a UDF DVD-RAM).
+
+    Returns an empty list when no CD-ROM is present. CI mounts a test
+    ISO: see scripts/mount_test_iso.ps1 (Windows) and
+    scripts/mount_test_iso.sh (Linux).
+    """
+    return [part.mountpoint for part in psutil.disk_partitions(all=False)
+            if (fs_info := get_filesystem_type(part.mountpoint)).is_cdrom
+            and fs_info.is_readonly]
+
+
+class BleachbitTestCase(unittest.TestCase):
+    """TestCase class with several convenience methods and asserts"""
+    _patchers = []
+
+    @classmethod
+    def setUpClass(cls):
+        """Do common setup for the test case
+
+        * Create a temporary directory for the testcase.
+        * Treat warnings as errors.
+        This is also set by environment variable in `Makefile` and
+        the CI workflow.
+        * Patch options paths.
+        """
+        bootstrap()
+        warnings.simplefilter("error")
+        cls._install_py314_asyncio_filters()
+        cls.tempdir = tempfile.mkdtemp(prefix=cls.__name__)
+        if 'BLEACHBIT_TEST_OPTIONS_DIR' not in os.environ:
+            cls._patch_options_paths()
+        bleachbit.Options.options.reset_overrides()
+        bleachbit.Options.options.set_override("first_start", False)
+
+    @staticmethod
+    def _install_py314_asyncio_filters():
+        """Ignore asyncio event-loop-policy deprecation warnings on Python 3.14+.
+
+        PyGObject calls ``asyncio.get_event_loop_policy()`` (deprecated in
+        Python 3.14, removed in 3.16) from inside ``Gtk.main_iteration_do()``.
+        The warning must be suppressed in the *current* warnings-filter scope
+        rather than inside a per-call ``catch_warnings()`` in ``refresh_gui()``:
+        ``test_shred_paths`` runs a background ``GtkWorkerThread`` whose own
+        ``catch_warnings()`` (inside PyGObject/asyncio) can race with the main
+        thread's ``catch_warnings()``, causing the ignore filter to be applied
+        to the wrong filter-list copy and silently dropped.  Installing the
+        filter in the active scope (``setUpClass``/``setUp``) makes it visible
+        to every copy of the filter list, including the worker thread's.
+        """
+        ignore_pygobject_asyncio_warnings()
+
+    @classmethod
+    def _patch_options_paths(cls):
+        to_patch = [('bleachbit.options_dir', cls.tempdir),
+                    ('bleachbit.options_file', os.path.join(
+                        cls.tempdir, "bleachbit.ini")),
+                    ('bleachbit.personal_cleaners_dir', os.path.join(cls.tempdir, "cleaners"))]
+        for target, source in to_patch:
+            patcher = mock.patch(target, source)
+            patcher.start()
+            cls._patchers.append(patcher)
+
+        bleachbit.Options.options.restore()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Do common teardown for the test case
+
+        * Collect garbage.
+        * Remove the temporary directory.
+        * Restore options paths.
+        """
+        bleachbit.Options.options.reset_overrides()
+        # Cancel any pending deferred flush (Options.__schedule_flush)
+        # so its background timer does not recreate bleachbit.ini inside
+        # tempdir while rmtree is mid-way through deleting it.
+        bleachbit.Options.options.cancel_pending_flush()
+        gc_collect()
+        # Stop patching the options paths before rmtree to avoid a
+        # potential flush into cls.tempdir while rmtree() is running
+        # to avoid OSError [Errno 66] Directory not empty.
+        if 'BLEACHBIT_TEST_OPTIONS_DIR' not in os.environ:
+            cls._stop_patch_options_paths()
+        # On Windows, a file may be temporarily locked, so retry.
+        # On macOS/Linux, a deferred flush or filesystem race may briefly
+        # make the directory non-empty, so retry on OSError too.
+        for attempt in range(5):
+            try:
+                if os.path.exists(cls.tempdir):
+                    shutil.rmtree(cls.tempdir)
+                break
+            except OSError:
+                # Log what is left so we can diagnose races.
+                try:
+                    remaining = os.listdir(cls.tempdir)
+                except OSError:
+                    remaining = ['<listdir failed>']
+                logger.warning(
+                    'tearDownClass: rmtree(%s) failed (attempt %d): %s; '
+                    'remaining entries: %r',
+                    cls.tempdir, attempt + 1, sys.exc_info()[1], remaining)
+                if attempt < 4:
+                    time.sleep(1)
+                else:
+                    raise
+
+    @classmethod
+    def _stop_patch_options_paths(cls):
+        for patcher in cls._patchers:
+            patcher.stop()
+
+    def run(self, result=None):
+        """Run the test case with conditional timer message"""
+        start = time.perf_counter()
+        outcome = super().run(result)
+        duration = time.perf_counter() - start
+        threshold = os.getenv('BLEACHBIT_SLOW_TEST_THRESHOLD')  # in seconds
+        if threshold:
+            threshold = float(threshold)
+        if not threshold or threshold < 0:
+            threshold = 30.0
+        if duration >= threshold:
+            test_id = f"{self.__class__.__name__}.{self._testMethodName}"
+            prefix = "🐌 " if _supports_stdout_char("🐌") else ""
+            print(f"{prefix}SLOW TEST: {test_id} ({duration:.1f}s)", flush=True)
+        return outcome
+
+    def setUp(self):
+        """Call before each test method"""
+        basedir = os.path.join(os.path.dirname(__file__), '..')
+        os.chdir(basedir)
+        self._options_file_snapshot = None
+        if os.path.exists(bleachbit.options_file):
+            with open(bleachbit.options_file, 'rb') as f:
+                self._options_file_snapshot = f.read()
+        # Re-install the asyncio deprecation filters for this test's
+        # catch_warnings() scope (setUpClass ran in a different scope).
+        self._install_py314_asyncio_filters()
+
+    def tearDown(self):
+        """Call after each test method; restore options file, reload Options"""
+        # Restore the working directory in case a test chdir'd into
+        # self.tempdir (e.g., test_assertExists_relative_path) to avoid
+        # WinError 32 in rmtree() in tearDownClass.
+        basedir = os.path.join(os.path.dirname(__file__), '..')
+        os.chdir(basedir)
+        # Cancel first: a deferred flush holds bleachbit.ini open, which
+        # fails the remove below with WinError 32. Cancelling takes the
+        # flush lock, so it also waits out a flush already running.
+        bleachbit.Options.options.cancel_pending_flush()
+        self._restore_options_file()
+        bleachbit.Options.options.restore()
+        # cancel the flush timer restore() re-arms when the file has no
+        # matching version, else it fires during a later test
+        bleachbit.Options.options.cancel_pending_flush()
+
+    def _restore_options_file(self):
+        """Put bleachbit.ini back the way setUp() found it.
+
+        Retries because on Windows a test subprocess can briefly hold
+        the file open.
+        """
+        for attempt in range(5):
+            try:
+                if self._options_file_snapshot is not None:
+                    os.makedirs(os.path.dirname(
+                        bleachbit.options_file), exist_ok=True)
+                    with open(bleachbit.options_file, 'wb') as f:
+                        f.write(self._options_file_snapshot)
+                elif os.path.exists(bleachbit.options_file):
+                    os.remove(bleachbit.options_file)
+                return
+            except PermissionError:
+                logger.warning('tearDown: restoring %s failed (attempt %d): %s',
+                               bleachbit.options_file, attempt + 1,
+                               sys.exc_info()[1])
+                if attempt == 4:
+                    raise
+                time.sleep(0.5)
+
+    #
+    # type asserts
+    #
+
+    def assertIsInteger(self, obj, msg=''):
+        self.assertIsInstance(obj, int, msg)
+
+    def assertIsString(self, obj, msg=''):
+        self.assertIsInstance(obj, str, msg)
+
+    def assertIsBytes(self, obj, msg=''):
+        self.assertIsInstance(obj, bytes, msg)
+
+    def assertIsLanguageCode(self, lang_id):
+        self.assertIsInstance(lang_id, str)
+        if lang_id in ('C', 'C.UTF-8', 'C.utf8', 'POSIX'):
+            return
+        self.assertGreaterEqual(len(lang_id), 2)
+        pattern = (
+            r'^[a-z]{2,3}([_-]([A-Z][A-Za-z]{1,3}|[0-9]{3}))?'
+            r'(\.[a-zA-Z][a-zA-Z0-9-]+)?(@\w+)?$')
+        self.assertTrue(re.match(pattern, lang_id),
+                        f'Invalid language code format: {lang_id}')
+
+    @staticmethod
+    def check_exists(func, path):
+        try:
+            func(path)
+            return True
+        except PermissionError:
+            # Python 3.4: on Windows os.path.[l]exists may return False when access is denied:
+            # https://bugs.python.org/issue28075
+            return True
+        except Exception:
+            return False
+
+    #
+    # file asserts
+    #
+    @staticmethod
+    def _assert_path(path):
+        """Normalize a path for existence checks in unit tests."""
+        # TestMakefile.py uses relative path without an environment variable.
+        # TestWinapp.py uses variable "$bbtestdir"
+        # However, do not expand paths that are already absolute or Path objects.
+        if isinstance(path, Path):
+            return str(path)
+        assert isinstance(
+            path, str), f'path must be a string or Path, not {type(path)}'
+        if not os.path.isabs(path):
+            path = os.path.expandvars(path)
+        return path
+
+    # Our assertion method names follow the convention in Python's unittest
+    # pylint: disable-next=invalid-name
+    def assertExists(self, path, msg='', func=os.stat):
+        """Check that a file, directory, or any path exists"""
+        path = self._assert_path(path)
+        if not self.check_exists(func, get_test_path(path)):
+            raise AssertionError(
+                'The file %s should exist, but it does not. %s' % (path, msg))
+
+    # pylint: disable-next=invalid-name
+    def assertNotExists(self, path, msg='', func=os.stat):
+        """Check that a file, directory, or any path does not exist"""
+        path = self._assert_path(path)
+        if self.check_exists(func, get_test_path(path)):
+            raise AssertionError(
+                'The file %s should not exist, but it does. %s' % (path, msg))
+
+    # pylint: disable-next=invalid-name
+    def assertLExists(self, path, msg=''):
+        """Check that a file, directory, or any path exists using lstat"""
+        self.assertExists(path, msg, os.lstat)
+
+    # pylint: disable-next=invalid-name
+    def assertNotLExists(self, path, msg=''):
+        """Check that a file, directory, or any path does not exist using lstat"""
+        self.assertNotExists(path, msg, os.lstat)
+
+    def assertCondExists(self, cond, path, msg=''):
+        if cond:
+            self.assertExists(path, msg)
+        else:
+            self.assertNotExists(path, msg)
+
+    def assertDirectoryCount(self, path, count, list_directories=True):
+        """Assert that a directory has a specific number of files
+
+        - Counts recursively
+        - Counts links
+        - Does not recurse links
+
+        """
+        object_list = list(children_in_directory(path, list_directories))
+        self.assertEqual(len(object_list), count, f"contains {len(object_list)} objects "
+                         f"such as {object_list[:2]}, expected {count}")
+
+    #
+    # file creation functions
+    #
+    def write_file(self, filename, contents=b'', mode='wb', encoding=None, text=None):
+        """Create a temporary file, optionally writing contents to it
+
+        If `text` is given, it is written in text mode with utf-8 encoding,
+        and `mode`/`encoding` are set automatically. `text` is mutually
+        exclusive with `contents`.
+
+        The temporary file is automatically deleted after testing.
+        """
+        if text is not None:
+            if contents != b'':
+                raise ValueError(
+                    "write_file: `text` is exclusive to `contents`")
+            contents = text
+            mode = 'w'
+            encoding = 'utf-8'
+        if not encoding and mode == 'w':
+            encoding = 'utf-8'
+        if not os.path.isabs(filename):
+            filename = os.path.join(self.tempdir, filename)
+        with open(extended_path(filename), mode, encoding=encoding) as f:
+            f.write(contents)
+        assert (os.path.exists(extended_path(filename)))
+        with open(extended_path(filename), 'rb' if 'b' in mode else 'r', encoding=encoding if 'b' not in mode else None) as f:
+            written_contents = f.read()
+        expected = contents if 'b' in mode else contents.encode(
+            encoding) if encoding else contents
+        actual = written_contents if 'b' in mode else written_contents.encode(
+            encoding) if encoding else written_contents
+        assert actual == expected, f"File contents mismatch: expected {expected!r}, got {actual!r}"
+        return filename
+
+    def mkdir(self, dirname):
+        """Create a directory with a given name
+
+        If dirname is not absolute, it will be created in self.tempdir.
+
+        Returns the path to the created directory.
+        """
+        assert isinstance(dirname, str)
+        if not os.path.isabs(dirname):
+            dirname = os.path.join(self.tempdir, dirname)
+        ext_dirname = extended_path(dirname)
+        os.makedirs(ext_dirname, exist_ok=True)
+        self.assertExists(ext_dirname)
+        self.assertTrue(os.path.isdir(ext_dirname))
+        self.assertFalse(is_hard_link(ext_dirname))
+        self.assertTrue(is_normal_directory(ext_dirname))
+        self.assertFalse(os.path.isfile(ext_dirname))
+        if bleachbit.IS_WINDOWS:
+            self.assertFalse(Windows.is_junction(ext_dirname))
+        return dirname
+
+    def mkstemp(self, **kwargs):
+        """Create a temporary file
+
+        If dir is not specified, it will be created in self.tempdir, and tempdir
+        will be automatically deleted after testing.
+
+        If prefix is not specified, it's defined by the test method name.
+        """
+        if 'dir' not in kwargs:
+            kwargs['dir'] = self.tempdir
+        if 'prefix' not in kwargs:
+            kwargs['prefix'] = f"{self.__class__.__name__}-{self._testMethodName}-"
+        (fd, filename) = tempfile.mkstemp(**kwargs)
+        os.close(fd)
+        return filename
+
+    def mkdtemp(self, **kwargs):
+        """Create a temporary directory
+
+        If dir is not specified, it will be created in self.tempdir, and tempdir
+        will be automatically deleted after testing.
+
+        If prefix is not specified, it's defined by the test method name.
+        """
+        if 'dir' not in kwargs:
+            kwargs['dir'] = self.tempdir
+        if 'prefix' not in kwargs:
+            kwargs['prefix'] = f"{self.__class__.__name__}-{self._testMethodName}-"
+        return tempfile.mkdtemp(**kwargs)
+
+
+def get_test_path(path):
+    """Normalize test paths for Windows"""
+    if not bleachbit.IS_WINDOWS:
+        return path
+    path = os.path.normpath(path)
+    # The \\?\ extended-length prefix applied by extended_path() requires
+    # an absolute path: Windows treats "\\?\<relative>" as invalid and
+    # reports it as non-existent.
+    if not os.path.isabs(path):
+        path = os.path.abspath(path)
+    return extended_path(path)
+
+
+def get_env(key):
+    """Get an environment variable. If not set, returns None instead of KeyError."""
+    if not key in os.environ:
+        return None
+    return os.environ[key]
+
+
+def have_root():
+    """Return true if we have root privileges on POSIX systems"""
+    return sudo_mode() or os.getuid() == 0
+
+
+def put_env(key, val):
+    """Put an environment variable. None removes the key
+
+    Returns None
+    """
+    if not val:
+        if key in os.environ:
+            del os.environ[key]
+    else:
+        os.environ[key] = val
+
+
+def skipIfWindows(f):
+    """Skip unit test if running on Windows (i.e., skipUnlessPOSIX)"""
+    return unittest.skipIf(bleachbit.IS_WINDOWS, 'running on Windows')(f)
+
+
+def skipUnlessDestructive(f):
+    """Skip unless destructive tests are allowed"""
+    return unittest.skipUnless(os.getenv('DESTRUCTIVE_TESTS') == 'T', 'environment variable DESTRUCTIVE_TESTS not set to T')(f)
+
+
+def skipUnlessLinux(f):
+    """Skip unit test unless running on Linux"""
+    return unittest.skipUnless(bleachbit.IS_LINUX, 'not running on Linux')(f)
+
+
+def skipUnlessMac(f):
+    """Skip unit test unless running on macOS"""
+    return unittest.skipUnless(bleachbit.IS_MAC, 'not running on macOS')(f)
+
+
+def skipUnlessWindows(f):
+    """Skip unit test unless running on Windows"""
+    return unittest.skipUnless(bleachbit.IS_WINDOWS, 'not running on Windows')(f)
+
+
+def also_with_sudo(test_func):
+    """
+    Decorator to mark test methods that should be run both normally and with sudo.
+
+    See also `tests/test_with_sudo.py`.
+    """
+    test_func._also_with_sudo = True
+    return test_func
+
+
+def touch_file(filename):
+    """Create an empty file"""
+    dname = os.path.dirname(filename)
+    if dname and not os.path.exists(dname):
+        # Make the directory, if it does not exist.
+        os.makedirs(dname)
+    Path(filename).touch()
+    assert os.path.exists(filename)
+    assert not is_normal_directory(filename)
+
+
+def validate_result(self, result, really_delete=False, allow_vanishing=False):
+    """Validate the command returned valid results.
+
+    Args:
+        result: The result dictionary to validate.
+        really_delete: Whether the operation actually deleted files.
+        allow_vanishing: When True, allows for files that may disappear between
+            discovery and validation (e.g., /tmp on a busy system)
+    """
+    self.assertIsInstance(result, dict, "result is a %s" % type(result))
+    # label
+    self.assertIsString(result['label'])
+    self.assertGreater(len(result['label'].strip()), 0)
+    # n_*
+    self.assertIsInteger(result['n_deleted'])
+    self.assertGreaterEqual(result['n_deleted'], 0)
+    self.assertLessEqual(result['n_deleted'], 1)
+    self.assertEqual(result['n_special'] + result['n_deleted'], 1)
+    # size
+    self.assertIsInstance(result['size'], (int, type(
+        None),), "size is %s" % str(result['size']))
+    # path
+    filename = result['path']
+    if not filename:
+        # the process action, for example, does not have a filename
+        return
+    self.assertIsInstance(filename, (str, type(None)),
+                          "Filename is invalid: '%s' (type %s)" % (filename, type(filename)))
+    if isinstance(filename, str) and not filename[0:2] == 'HK':
+        if really_delete:
+            self.assertNotLExists(filename)
+        elif allow_vanishing:
+            # Tolerate vanishing files during preview.
+            if not os.path.lexists(filename):
+                logger.debug('vanished %s', filename)
+        else:
+            # Do not tolerate vanishing during preview.
+            self.assertLExists(filename)
+
+
+def get_winregistry_value(key, subkey):
+    try:
+        # pylint: disable-next=possibly-used-before-assignment
+        with winreg.OpenKey(key, subkey) as hkey:
+            return winreg.QueryValue(hkey, None)
+    except FileNotFoundError:
+        return None
+
+
+def get_opened_windows_titles():
+    """
+    Get the titles of all opened windows.
+
+    Returns:
+        list: A list of window titles.
+    """
+    opened_windows_titles = []
+
+    def enumerate_opened_windows_titles(hwnd, _ctx):
+        # pylint: disable-next=possibly-used-before-assignment
+        text = win32gui.GetWindowText(hwnd)
+        if win32gui.IsWindowVisible(hwnd) and text:
+            opened_windows_titles.append(text)
+
+    win32gui.EnumWindows(enumerate_opened_windows_titles, None)
+    return opened_windows_titles
+
+
+# Common test strings for filename testing across different test modules
+# https://github.com/bleachbit/bleachbit/issues/1709
+_SPECIAL_TEST_STRINGS = [
+    '.prefixandsuffix',  # simple
+    "x".zfill(150),  # long
+    ' begins_with_space',
+    "''",  # quotation mark
+    "~`!@#$%^&()-_+=x",  # non-alphanumeric characters
+    "[]{};'.,x",  # non-alphanumeric characters
+    'abcdefgh',  # simple Unicode
+    'J\xf8rgen Scandinavian',
+    '\u2014em-dash',  # LP#1454030
+    "עִבְרִית",  # Hebrew
+    "アメリカ",  # Katakana
+    "ÄäǞǟËëḦḧÏïḮḯÖöȪȫṎṏT̈ẗÜüǕǖǗǘǙǚǛǜṲṳṺṻẄẅẌẍŸÿ",  # umlauts
+    'sigil-should$not-change',
+    'issue_1709_\udcd6',  # GitHub issue 1709
+    'invalid_unicode_surrogate_\udce9',
+    'multi_surrogate_\udcd6\udcd7\udcd8',
+    'fire_emoji_\U0001F525',
+    'ascii.bak',
+    'äöüßÄÖÜ.bak',
+    "עִבְרִית.bak",
+    'ɡælɪk.bak'
+]
+
+
+def _has_surrogate(s):
+    """Return True if the string contains a lone UTF-16 surrogate."""
+    return any('\ud800' <= c <= '\udfff' for c in s)
+
+
+# macOS APFS/HFS+ rejects lone UTF-16 surrogates in filenames with
+# OSError "Illegal byte sequence", so exclude those strings on macOS.
+SPECIAL_TEST_STRINGS = [
+    s for s in _SPECIAL_TEST_STRINGS
+    if not (bleachbit.IS_MAC and _has_surrogate(s))
+]
+del _SPECIAL_TEST_STRINGS, _has_surrogate
+
+# Additional strings for POSIX systems.
+# Windows doesn't allow or requires special handling for these characters.
+POSIX_SPECIAL_TEST_STRINGS = [
+    '"*',
+    '\t\\',
+    ':?<>|',
+    ' ',
+    'endspace ',
+    'endperiod.'  # Windows filenames cannot end with space or period
+]

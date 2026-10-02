@@ -1,0 +1,343 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+"""
+Code that is commonly shared throughout BleachBit
+"""
+
+import os
+import re
+import sys
+import time
+
+from bleachbit import Log
+
+APP_VERSION = "6.0.5"
+# PurgeBit: English name of this distribution.  The Chinese name shown in the
+# interface is 涤尘, which is the translation of this string.  Use
+# Language.get_app_name() for text the user reads, and this constant for
+# internal identifiers and the command line.
+APP_NAME = "PurgeBit"
+APP_URL = "https://www.xp06.com/"
+APP_COPYRIGHT = "Copyright (C) 2008-2026 XP06.com"
+
+socket_timeout = 10
+
+if sys.version_info < (3, 8, 0):
+    sys.stderr.write('PurgeBit requires Python version 3.8 or later\n')
+    sys.exit(1)
+
+if hasattr(sys, 'frozen'):
+    stdout_encoding = 'utf-8'
+else:
+    stdout_encoding = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+
+logger = Log.init_log()
+
+_startup_t0 = time.monotonic()
+_startup_profile = os.getenv(
+    'BLEACHBIT_STARTUP_PROFILE') in ('1', 'true', 'True')
+
+
+def log_startup_time(name):
+    """Log time since package import when BLEACHBIT_STARTUP_PROFILE is set"""
+    if not _startup_profile:
+        return
+    logger.info('startup %s: %.1f ms', name,
+                (time.monotonic() - _startup_t0) * 1000)
+
+
+def get_version(four_parts=False):
+    """Return version information as a string.
+
+    CI builds will have an integer build number.
+
+    If four_parts is True, always return a four-part version string.
+    If False, return three or four parts, depending on available information.
+    """
+    build_number_env = os.getenv('GITHUB_RUN_NUMBER')
+    try:
+        from bleachbit.Revision import build_number as build_number_src
+    except ImportError:
+        # Revision.py only exists in CI and tarball builds
+        build_number_src = None
+
+    build_number = build_number_src or build_number_env
+    if build_number and not str(build_number).isdigit():
+        logger.warning('ignoring non-numeric build number: %r', build_number)
+        build_number = None
+    if not build_number:
+        if not four_parts:
+            return APP_VERSION
+        return f'{APP_VERSION}.0'
+    return f'{APP_VERSION}.{build_number}'
+
+
+#
+# Platform
+#
+
+# platform
+IS_WINDOWS = os.name == 'nt'
+IS_POSIX = os.name == 'posix'
+IS_LINUX = sys.platform.startswith('linux')
+IS_MAC = sys.platform == 'darwin'
+IS_BSD = sys.platform.startswith(('freebsd', 'openbsd', 'netbsd'))
+IS_FREEBSD = sys.platform.startswith('freebsd')
+IS_NETBSD = sys.platform[:6] == 'netbsd'
+ARCH_BITS = 64 if sys.maxsize > 2**32 else 32
+
+
+def _harden_dll_search_path():
+    """Drop the current directory (and PATH when frozen) from the DLL search path.
+
+    Blocks DLL-preloading privilege escalation. bootstrap() calls it before
+    the first DLL loads, not at import, so build tooling that imports the
+    package does not disturb the search path.
+    """
+    import ctypes
+    from ctypes import wintypes
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+
+    # Frozen builds bundle every dependency next to the exe, so restrict to
+    # app dir + System32 + add_dll_directory() dirs (also drops PATH).
+    # SetDefaultDllDirectories needs Win8+ (or 7 with KB2533623)
+    if hasattr(sys, 'frozen'):
+        LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x00001000
+        try:
+            set_default = kernel32.SetDefaultDllDirectories
+            set_default.argtypes = [wintypes.DWORD]
+            set_default.restype = wintypes.BOOL
+            if set_default(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS):
+                return
+        except (AttributeError, OSError) as e:
+            logger.debug('SetDefaultDllDirectories is unavailable, so falling '
+                         'back to SetDllDirectoryW: %s', e)
+
+    # drops the current directory but keeps PATH; NULL would restore the default
+    try:
+        set_dir = kernel32.SetDllDirectoryW
+        set_dir.argtypes = [wintypes.LPCWSTR]
+        set_dir.restype = wintypes.BOOL
+        set_dir("")
+    except (AttributeError, OSError) as e:
+        logger.debug('could not drop the current directory from the DLL '
+                     'search path: %s', e)
+
+
+# file system attributes
+FS_CASE_SENSITIVE = not (IS_WINDOWS or IS_MAC)
+FS_SCAN_RE_FLAGS = 0 if FS_CASE_SENSITIVE else re.IGNORECASE
+
+
+#
+# Paths
+#
+
+# Windows
+bleachbit_exe_path = None
+if hasattr(sys, 'frozen'):
+    # running frozen in py2exe
+    bleachbit_exe_path = os.path.dirname(sys.executable)
+    bleachbit_package_path = bleachbit_exe_path
+else:
+    # __file__ is absolute path to __init__.py
+    bleachbit_package_path = os.path.dirname(__file__)
+    bleachbit_exe_path = os.path.dirname(bleachbit_package_path)
+
+# license
+license_filename = None
+license_filenames = ('/usr/share/common-licenses/GPL-3',  # Debian, Ubuntu
+                     # Microsoft Windows
+                     os.path.join(bleachbit_exe_path, 'COPYING'),
+                     '/usr/share/doc/bleachbit-' + APP_VERSION + '/COPYING',  # CentOS, Fedora, RHEL
+                     '/usr/share/licenses/bleachbit/COPYING',  # Fedora 21+, RHEL 7+
+                     '/usr/share/doc/packages/bleachbit/COPYING',  # OpenSUSE 11.1
+                     '/usr/pkg/share/doc/bleachbit/COPYING',  # NetBSD 5
+                     '/usr/share/licenses/common/GPL3/license.txt')  # Arch Linux
+for lf in license_filenames:
+    if os.path.exists(lf):
+        license_filename = lf
+        break
+
+
+def _home_dir():
+    """Return home directory with fallback for missing HOME and passwd entry."""
+    home = os.getenv('HOME')
+    if home:
+        return home
+    # expanduser() falls back to a lookup in passwd database.
+    home = os.path.expanduser('~')
+    if home != '~':
+        return home
+    return '/tmp'
+
+
+# configuration
+portable_mode = False
+options_dir = None
+if IS_POSIX:
+    options_dir = os.path.join(_home_dir(), ".config/bleachbit")
+elif IS_WINDOWS:
+    if os.path.exists(os.path.join(bleachbit_exe_path, 'bleachbit.ini')):
+        # portable mode
+        portable_mode = True
+        options_dir = bleachbit_exe_path
+    else:
+        # installed mode
+        options_dir = os.path.expandvars(r"${APPDATA}\BleachBit")
+
+options_dir = os.environ.get('BLEACHBIT_TEST_OPTIONS_DIR', options_dir)
+
+options_file = os.path.join(options_dir, "bleachbit.ini")
+
+# check whether the application is running from the source tree
+if not portable_mode:
+    paths = (
+        '../cleaners',
+        '../Makefile',
+        '../COPYING')
+    existing = (
+        os.path.exists(os.path.join(bleachbit_exe_path, path))
+        for path in paths)
+    portable_mode = all(existing)
+
+# personal cleaners
+personal_cleaners_dir = os.path.join(options_dir, "cleaners")
+
+# system cleaners
+# On Windows in portable mode, the bleachbit_exe_path is equal to
+# options_dir, so be careful that system_cleaner_dir is not set to
+# personal_cleaners_dir.
+_exe_cleaners_dir = os.path.join(bleachbit_exe_path, 'cleaners')
+_package_cleaners_dir = os.path.join(bleachbit_package_path, 'cleaners')
+if os.path.isdir(_exe_cleaners_dir) and not portable_mode:
+    system_cleaners_dir = _exe_cleaners_dir
+elif os.path.isdir(_package_cleaners_dir) and not portable_mode:
+    # AppImage
+    system_cleaners_dir = _package_cleaners_dir
+elif IS_LINUX or IS_MAC:
+    system_cleaners_dir = '/usr/share/bleachbit/cleaners'
+elif IS_WINDOWS:
+    system_cleaners_dir = os.path.join(bleachbit_exe_path, 'share\\cleaners\\')
+elif IS_NETBSD:
+    system_cleaners_dir = '/usr/pkg/share/bleachbit/cleaners'
+elif IS_BSD:
+    system_cleaners_dir = '/usr/local/share/bleachbit/cleaners'
+else:
+    system_cleaners_dir = None
+    logger.warning(
+        'unknown system cleaners directory for platform %s ', sys.platform)
+
+# local cleaners directory for running without installation (Windows or Linux)
+local_cleaners_dir = None
+if portable_mode:
+    local_cleaners_dir = os.path.join(bleachbit_exe_path, 'cleaners')
+
+
+def get_share_dirs():
+    """Return ordered list of directories to search for shared data files."""
+    if hasattr(sys, 'frozen'):
+        # frozen in py2exe
+        base_dirs = [
+            os.path.join(bleachbit_exe_path, 'share'),
+            bleachbit_exe_path,
+        ]
+    else:
+        # installed .deb or .rpm has `__file__` = "/usr/share/bleachbit/__init__.py",
+        # so that dirname() is "/usr/share/bleachbit"
+        package_dir = bleachbit_package_path
+        # When running from source, share directory is `../share/` from `__init__.py`.
+        repo_root = os.path.normpath(os.path.join(package_dir, '..'))
+        base_dirs = [
+            os.path.join(package_dir, 'share'),
+            os.path.join(repo_root, 'share')
+        ]
+    if system_cleaners_dir:
+        # One directory up from the system cleaners directory.
+        # This works when installed, like under `/usr/share`.
+        base_dirs.append(os.path.dirname(system_cleaners_dir))
+    # Remove duplicates while preserving the order.
+    return list(dict.fromkeys(base_dirs))
+
+
+def get_share_path(filename):
+    """Return path to a shared data file if it exists, else None."""
+    for base_dir in get_share_dirs():
+        candidate = os.path.normpath(os.path.join(base_dir, filename))
+        if os.path.exists(candidate):
+            return candidate
+    logger.error('unknown location for %s', filename)
+    return None
+
+
+# application icon
+__icons = (
+    # AppImage
+    os.path.normpath(os.path.join(bleachbit_exe_path,
+                                  'pixmaps/purgebit.png')),
+    # Linux
+    '/usr/share/pixmaps/purgebit.png',
+    # NetBSD
+    '/usr/pkg/share/pixmaps/purgebit.png',
+    # FreeBSD and OpenBSD
+    os.path.normpath(os.path.join(bleachbit_exe_path,
+                                  'share\\purgebit.png')),  # Windows
+    # When running from source (i.e., not installed).
+    os.path.normpath(os.path.join(bleachbit_exe_path, 'purgebit.png')),
+)
+appicon_path = None
+for __icon in __icons:
+    if os.path.exists(__icon):
+        appicon_path = __icon
+
+
+def _resolve_locale_dir(exe_path, is_linux, is_mac, is_windows, is_netbsd, is_bsd,
+                        path_exists=os.path.exists):
+    """Return the locale directory to use, given the platform and the
+    directory containing the running executable.
+
+    In the macOS .app bundle, exe_path is Contents/Resources (the parent
+    of the bleachbit package directory), while locale/ lives one level up
+    at Contents/locale -- neither the './locale/' nor the AppImage-style
+    'next to the executable' check below finds it, which previously fell
+    through to the Linux/macOS '/usr/share/locale/' fallback and silently
+    lost all bundled translations.
+    """
+    exe_locale_dir = os.path.join(exe_path, 'locale')
+    bundle_locale_dir = os.path.normpath(
+        os.path.join(exe_path, '..', 'locale')) if is_mac else None
+    if path_exists("./locale/"):
+        # local locale (personal)
+        return os.path.abspath("./locale/")
+    if path_exists(exe_locale_dir):
+        # AppImage
+        return exe_locale_dir
+    if is_mac and bundle_locale_dir and path_exists(bundle_locale_dir):
+        # macOS .app bundle: Contents/locale, one level above
+        # Contents/Resources
+        return bundle_locale_dir
+    # system-wide installed locale
+    if is_linux or is_mac:
+        return "/usr/share/locale/"
+    if is_windows:
+        return os.path.join(exe_path, "share\\locale\\")
+    if is_netbsd:
+        return "/usr/pkg/share/locale/"
+    if is_bsd:
+        return "/usr/local/share/locale/"
+    return "/usr/share/locale/"
+
+
+# locale directory
+locale_dir = _resolve_locale_dir(
+    bleachbit_exe_path, IS_LINUX, IS_MAC, IS_WINDOWS, IS_NETBSD, IS_BSD)
+
+
+#
+# URLs
+#
+help_contents_url = "https://www.bleachbit.org/help"

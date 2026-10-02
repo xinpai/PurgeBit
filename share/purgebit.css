@@ -1,0 +1,116 @@
+/* 涤尘 PurgeBit 品牌样式表
+ *
+ * 该文件在应用启动时以 STYLE_PROVIDER_PRIORITY_APPLICATION 优先级
+ * 注入到默认屏幕，用于统一界面外观（列表、日志、进度条、状态栏）。
+ * 标题栏与按钮沿用系统主题外观，不做定制。
+ * 仅做视觉定制，不影响任何清理逻辑。
+ *
+ * 说明：不设置全局 font-family / font-size，
+ * 以免覆盖用户在“首选项”中的字体字号设置。
+ */
+
+@define-color bb_primary #14808f;
+@define-color bb_primary_dark #0e6673;
+@define-color bb_primary_light #1a9bb0;
+@define-color bb_bg #f6f8f9;
+@define-color bb_border #d5dde2;
+@define-color bb_text #1f2933;
+@define-color bb_muted #56666e;
+
+/* ---------- 汇总条 ---------- */
+
+.bb-summary-bar {
+  background-color: #eef4f6;
+  border-bottom: 1px solid @bb_border;
+  padding: 5px 12px;
+  color: @bb_muted;
+}
+
+.bb-summary-bar .bb-summary-strong {
+  color: @bb_primary;
+  font-weight: 700;
+}
+
+.bb-summary-bar .bb-summary-hint {
+  color: #8a9aa3;
+}
+
+/* ---------- 左侧清洁器列表 ---------- */
+
+.bb-sidebar {
+  background-color: @bb_bg;
+  border-right: 1px solid @bb_border;
+}
+
+.bb-sidebar entry {
+  border-radius: 6px;
+  border: 1px solid @bb_border;
+  background-color: #ffffff;
+  min-height: 28px;
+  padding: 2px 6px;
+}
+
+.bb-sidebar entry:focus {
+  border-color: @bb_primary;
+  box-shadow: none;
+}
+
+treeview.view {
+  background-color: #ffffff;
+  color: @bb_text;
+}
+
+treeview.view:hover {
+  background-color: rgba(20, 128, 143, 0.07);
+}
+
+treeview.view:selected {
+  background-color: rgba(20, 128, 143, 0.18);
+  color: @bb_text;
+}
+
+treeview.view:selected:focus {
+  background-color: rgba(20, 128, 143, 0.24);
+  color: @bb_text;
+}
+
+/* ---------- 右侧日志与进度 ---------- */
+
+.bb-log textview,
+.bb-log text {
+  background-color: #fbfcfd;
+  color: #2b3a42;
+  padding: 4px 6px;
+}
+
+progressbar trough {
+  background-color: #e3eaee;
+  border-radius: 4px;
+  min-height: 6px;
+  border: none;
+}
+
+progressbar progress {
+  background-image: linear-gradient(to right, @bb_primary_light, @bb_primary);
+  border-radius: 4px;
+  min-height: 6px;
+  border: none;
+}
+
+/* ---------- 状态栏 ---------- */
+
+statusbar {
+  background-color: #eef4f6;
+  border-top: 1px solid @bb_border;
+  color: @bb_muted;
+  padding: 2px 8px;
+}
+
+/* ---------- 分栏手柄 ---------- */
+
+paned > separator {
+  background-color: @bb_border;
+  min-width: 1px;
+  min-height: 1px;
+  background-image: none;
+}

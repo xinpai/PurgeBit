@@ -1,0 +1,6 @@
+# PurgeBit 开发与测试依赖（运行时不需要，见 requirements.txt）
+#
+# 安装到项目自带的运行环境：
+#     windows\vcpkg_installed\x86-windows\tools\python3\python.exe -m pip install -r requirements-dev.txt
+
+pytest==9.1.1

@@ -1,0 +1,199 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+"""
+Prepare to start the application
+"""
+
+import getpass
+import os
+import re
+import sys
+
+from bleachbit import IS_POSIX, IS_WINDOWS, logger
+
+# pylint: disable=invalid-name
+_bootstrapped = False
+
+_PYTHON_DLL_RE = re.compile(r'python\d+\.dll$', re.IGNORECASE)
+
+
+def _apply_fontconfig_backend_preference():
+    """On Windows, set PANGOCAIRO_BACKEND=fc if the user chose fontconfig.
+
+    It is important that this runs before Gtk.
+    """
+    if not IS_WINDOWS:
+        return
+    try:
+        from bleachbit.Options import options
+        if options.get('use_fontconfig_backend'):
+            os.environ['PANGOCAIRO_BACKEND'] = 'fc'
+    except Exception as e:
+        logger.debug('could not read the fontconfig backend preference: %s', e)
+
+
+def check_wayland_and_root():
+    """Check if Wayland is being used and root is not allowed.
+
+    Returns True if there is a problem
+    False if no problem (e.g., not root, not Wayland)
+    """
+    if not IS_POSIX:
+        return False
+
+    # The two imports from bleachbit must come after sys.path is adjusted.
+    import bleachbit.Unix
+    from bleachbit.Language import get_text as _
+
+    # FIXME: if started from launcher (.desktop file), there may be no console
+    # to which to print this message.
+    if bleachbit.Unix.is_display_protocol_wayland_and_root_not_allowed():
+        print(_('To run a GUI application on Wayland with root, allow access with this command:\n'
+              'xhost si:localuser:root\n'
+                'See more about xhost at https://docs.bleachbit.org/doc/frequently-asked-questions.html'), file=sys.stderr)
+        return True
+    return False
+
+
+def _bootstrap_posix():
+    """Bootstrap for POSIX systems"""
+    # os.path.expanduser('~') returns '~' unchanged when HOME is unset
+    # and the user has no passwd entry (e.g., Docker containers).
+    from bleachbit import _home_dir
+    home_dir = _home_dir()
+    if not os.getenv('HOME') and home_dir == '/tmp':
+        logger.warning('HOME not set and no passwd entry; using %s', home_dir)
+
+    # Set fallbacks for environment variables.
+    envs = {
+        'HOME': home_dir,
+        'PATH': '/usr/bin:/bin:/usr/sbin:/sbin',
+        'XDG_CACHE_HOME': os.path.join(home_dir, '.cache'),
+        'XDG_CONFIG_HOME': os.path.join(home_dir, '.config'),
+        'XDG_DATA_HOME': os.path.join(home_dir, '.local', 'share')
+    }
+    if not os.getenv('USER'):
+        try:
+            envs['USER'] = getpass.getuser()
+        except (OSError, KeyError) as e:
+            logger.debug('could not determine the user name: %s', e)
+    for varname, value in envs.items():
+        if not os.getenv(varname):
+            os.environ[varname] = value
+
+
+def _bootstrap_windows():
+    """Bootstrap for Windows"""
+    from bleachbit import Windows
+    Windows.setup_environment()
+
+    # Use our `font.conf` (see commit 3385952b37d78).
+    os.environ.pop('FONTCONFIG_FILE', None)
+
+    # change error handling to avoid popup with GTK 3
+    # https://github.com/bleachbit/bleachbit/issues/651
+    import win32api  # pylint: disable=import-error
+    import win32con  # pylint: disable=import-error
+    win32api.SetErrorMode(win32con.SEM_FAILCRITICALERRORS |
+                          win32con.SEM_NOGPFAULTERRORBOX | win32con.SEM_NOOPENFILEERRORBOX)
+
+    # Set GDK_PIXBUF_MODULE_FILE based on the Python DLL location.
+    # This ensures GTK can find the pixbuf loaders when running from
+    # a bundled/frozen environment where the standard paths may not apply.
+
+    # EnumProcessModules already gives us the HMODULE, so use
+    # win32api.GetModuleFileName(module) directly instead of
+    # win32process.GetModuleFileNameEx(-1, module): the latter re-opens
+    # the current-process pseudo-handle through PSAPI, which has been
+    # observed to fail with ERROR_INVALID_HANDLE (6) on the GitHub
+    # Actions windows-latest image under PsExec -l (low integrity).
+    # This may have been an intermittant error.
+    # The enumeration and per-module lookup are wrapped defensively so a
+    # future environment quirk does not abort bootstrap(), which would
+    # otherwise take down every test's setUpClass.
+    import win32process
+    try:
+        modules = win32process.EnumProcessModules(-1)
+    except Exception:
+        logger.exception(
+            'EnumProcessModules failed; skipping GDK_PIXBUF_MODULE_FILE')
+        modules = []
+    for module in modules:
+        try:
+            name = win32api.GetModuleFileName(module)
+        except Exception:
+            continue
+        if _PYTHON_DLL_RE.search(name):
+            bindir = os.path.dirname(name)
+            pixbuf_dir = os.path.join(
+                bindir, 'lib', 'gdk-pixbuf-2.0', '2.10.0')
+            loaders_dir = os.path.join(pixbuf_dir, 'loaders')
+            os.environ['GDK_PIXBUF_MODULE_FILE'] = os.path.join(
+                pixbuf_dir, 'loaders.cache')
+            # setup.py rewrites loader paths in loaders.cache to bare
+            # filenames (e.g. "pixbufloader-svg.dll"), so gdk-pixbuf needs
+            # GDK_PIXBUF_MODULEDIR to resolve them. Without it, gdk-pixbuf
+            # falls back to its compiled-in PIXBUF_LIBDIR (a CI-only path),
+            # and the external SVG pixbuf loader cannot be found, which
+            # prevents GTK from rendering SVG resources such as
+            # check-symbolic.svg from its GResource bundle.
+            # Only set it when the directory actually exists: in a
+            # non-packaged run (e.g. dev/test from vcpkg_installed) the
+            # loaders cache keeps absolute paths and the directory may not
+            # be needed, so avoid pointing gdk-pixbuf at a dangling path.
+            if os.path.isdir(loaders_dir):
+                os.environ['GDK_PIXBUF_MODULEDIR'] = loaders_dir
+            else:
+                logger.debug(
+                    'gdk-pixbuf loaders directory not found: %s', loaders_dir)
+            break
+
+
+def bootstrap():
+    """Bootstrap the application"""
+    global _bootstrapped  # pylint: disable=global-statement
+    if _bootstrapped:
+        return
+    _bootstrapped = True
+    if IS_WINDOWS:
+        # Do this before anything loads a DLL (e.g. bleachbit.Windows).
+        import bleachbit
+        try:
+            # Private helper of our own package.
+            # pylint: disable-next=protected-access
+            bleachbit._harden_dll_search_path()
+        except Exception:
+            bleachbit.logger.warning(
+                'could not harden the DLL search path', exc_info=True)
+    _apply_fontconfig_backend_preference()
+    _suppress_pygobject_asyncio_deprecations()
+    if IS_WINDOWS:
+        _bootstrap_windows()
+    elif IS_POSIX:
+        _bootstrap_posix()
+    from bleachbit import log_startup_time
+    log_startup_time('bootstrap done')
+
+
+def _suppress_pygobject_asyncio_deprecations():
+    """Globally ignore PyGObject's asyncio deprecation warnings on Python 3.14+.
+
+    PyGObject 3.56 calls ``asyncio.get_event_loop_policy()`` (deprecated in
+    Python 3.14, removed in 3.16) from inside ``Gtk.main_iteration_do()`` and
+    ``Gtk.Application.run()``.  If this warning is not suppressed globally,
+    it surfaces as a red error in the GUI log: ``Worker.run()`` captures all
+    warnings via ``catch_warnings(record=True)`` and re-logs them as
+    ``logger.warning()``, which ``GtkLoggerHandler`` tags as ``'error'``.
+
+    Installing the filter once here (before any thread starts) avoids the
+    race condition that per-call ``catch_warnings()`` suppressors have when
+    a background ``GtkWorkerThread`` enters its own ``catch_warnings()``.
+    """
+    # Imported here so bootstrapping (which hardens the DLL search path on
+    # Windows) is not preceded by importing anything GTK-related.
+    from bleachbit.GtkShim import ignore_pygobject_asyncio_warnings
+    ignore_pygobject_asyncio_warnings()

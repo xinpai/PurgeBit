@@ -1,0 +1,65 @@
+PurgeBit (涤尘) — Origin and Modification Notice
+================================================
+
+1. Origin
+---------
+PurgeBit (Chinese name: 涤尘) is a derivative work (fork) of BleachBit.
+
+    Upstream project : BleachBit
+    Upstream source  : https://github.com/bleachbit/bleachbit
+    Upstream website : https://www.bleachbit.org
+    Upstream author  : Andrew Ziem <andrew@bleachbit.org> and contributors
+    Base commit      : 4f626442c83866961182bf8a9b0b636e1684d9b2
+                       (branch master, dated 2026-10-01)
+    Retrieved on     : 2026-10-02
+
+Reference material kept locally outside version control (see `upstream/`):
+
+    BleachBit documentation source : https://github.com/bleachbit/docs
+                                     commit b48ffd7846ad669d1cb1b505684808c144594f67
+    CleanerML rule repository      : https://github.com/bleachbit/cleanerml
+                                     commit f28fbdaec0e8264c38e00c6c6463d39c081cadf6
+
+2. License
+----------
+PurgeBit, including its source code and cleaner definitions derived from
+BleachBit, is licensed under the GNU General Public License version 3,
+or (at your option) any later version. The full license text is in the
+file `COPYING` in the top-level directory.
+
+    Copyright (C) 2008-2026 Andrew Ziem and the BleachBit contributors
+    Copyright (C) 2026 PurgeBit contributors
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+3. Modification notice
+----------------------
+This version of BleachBit has been modified and is distributed under the
+name PurgeBit (涤尘). Modifications are made by the PurgeBit contributors
+starting 2026-10-02.
+
+In accordance with GNU GPL version 3 section 5(a), every source file that
+PurgeBit modifies must carry a prominent notice stating that it was
+modified. The convention used by this project is to add the following
+line directly below the upstream copyright block:
+
+    # Modified by PurgeBit contributors, 2026-10-02.
+
+Files that are still identical to upstream BleachBit must not be given a
+PurgeBit copyright line, and their original copyright notices must be
+left intact. See `doc/LICENSING.md` for the full compliance checklist.
+
+4. Name and trademark
+---------------------
+The GNU GPL grants rights to the code, not to the project name or logo.
+"BleachBit" and the BleachBit logo identify the upstream project and its
+author; they are not covered by the copyright license. PurgeBit therefore
+uses its own product name, its own application identifiers (for example
+`org.purgebit.PurgeBit` instead of `org.bleachbit.BleachBit`) and its own
+icons, and does not claim to be an official BleachBit release.
+
+Copyright (C) 2008-2026 Andrew Ziem and the BleachBit contributors
+Copyright (C) 2026 PurgeBit contributors

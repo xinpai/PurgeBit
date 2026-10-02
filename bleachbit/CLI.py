@@ -1,0 +1,422 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) 2008-2026 Andrew Ziem.
+#
+# This work is licensed under the terms of the GNU GPL, version 3 or
+# later.  See the COPYING file in the top-level directory.
+
+"""
+Command line interface
+"""
+
+import errno
+import logging
+import optparse
+import sys
+
+from bleachbit.Cleaner import backends, create_simple_cleaner, register_cleaners
+from bleachbit.General import sanitize_surrogates
+from bleachbit import APP_VERSION, stdout_encoding, IS_WINDOWS
+from bleachbit import APP_NAME, Options, Worker
+from bleachbit.Bootstrap import bootstrap
+from bleachbit.Language import get_text as _
+from bleachbit.Log import set_root_log_level
+
+logger = logging.getLogger(__name__)
+
+_OUTPUT_CLOSED_ERRNOS = {errno.EINVAL, errno.EPIPE}
+
+
+class CliCallback:
+    """Command line's callback passed to Worker"""
+
+    def __init__(self, quiet=False):
+        self.quiet = quiet
+        self._output_closed = False
+
+    def append_text(self, msg, _tag=None):
+        """Write text to the terminal"""
+        msg = sanitize_surrogates(msg)
+        if self.quiet or self._output_closed:
+            return
+        try:
+            print(msg.strip('\n').encode(stdout_encoding,
+                  errors='replace').decode(stdout_encoding))
+        except BrokenPipeError:
+            self._output_closed = True
+        except OSError as e:
+            if e.errno in _OUTPUT_CLOSED_ERRNOS:
+                self._output_closed = True
+                return
+            raise
+
+    def update_progress_bar(self, status):
+        """Not used"""
+
+    def update_total_size(self, size):
+        """Not used"""
+
+    def update_item_size(self, op, opid, size):
+        """Not used"""
+
+    def worker_done(self, worker, really_delete):
+        """Not used"""
+
+
+def cleaners_list():
+    """Yield each cleaner-option pair"""
+    list(register_cleaners())
+    for key in sorted(backends):
+        c_id = backends[key].get_id()
+        for (o_id, _o_name) in backends[key].get_options():
+            yield f"{c_id}.{o_id}"
+
+
+def list_cleaners():
+    """Display available cleaners"""
+    for cleaner in cleaners_list():
+        print(cleaner)
+
+
+def preview_or_clean(operations, really_clean, quiet=False):
+    """Preview deletes and other changes"""
+    cb = CliCallback(quiet)
+    worker = Worker.Worker(cb, really_clean, operations).run()
+    try:
+        for ret in worker:
+            if not ret:
+                break
+    except BrokenPipeError:
+        # Propagate to the top-level handler (e.g., when the downstream
+        # pipe consumer like `less` or `head` closes early).
+        raise
+    except Exception:
+        logger.exception('Failed to clean')
+
+
+def args_to_operations_list(preset, all_but_warning):
+    """For --preset and --all-but-warning return list of operations as list
+
+    Example return: ['google_chrome.cache', 'system.tmp']
+    """
+    args = []
+    if not backends:
+        list(register_cleaners())
+    if not backends:
+        raise RuntimeError('no cleaners registered')
+    for key in sorted(backends):
+        c_id = backends[key].get_id()
+        for (o_id, _o_name) in backends[key].get_options():
+            # restore presets from the GUI
+            if preset and Options.options.get_tree(c_id, o_id):
+                args.append('.'.join([c_id, o_id]))
+            elif all_but_warning and not backends[c_id].get_warning(o_id):
+                args.append('.'.join([c_id, o_id]))
+    return args
+
+
+def args_to_operations(args, preset, all_but_warning, excludes=None):
+    """Convert command-line arguments to a dictionary of operations
+
+    Args:
+        args: List of cleaner.option strings (e.g., ['system.tmp', 'firefox.cache'])
+        preset: Boolean indicating whether to use saved preset operations
+        all_but_warning: Boolean indicating whether to include all non-warning operations
+        excludes: Optional list of cleaner.option strings to remove from operations
+
+    Returns:
+        Dictionary mapping cleaner IDs to lists of option IDs
+        Example: {'system': ['tmp'], 'firefox': ['cache']}
+    """
+    list(register_cleaners())
+    operations = {}
+    if not args:
+        args = []
+
+    if excludes is None:
+        excludes = []
+    positive_args = set(
+        args + args_to_operations_list(preset, all_but_warning))
+
+    def fix_deprecated(cid, oid):
+        if 'system' == cid and 'free_disk_space' == oid:
+            logger.info(
+                "Change 'system.free_disk_space' (deprecated) to 'system.empty_space'")
+            return 'empty_space'
+        return oid
+
+    # TRANSLATORS: Error shown on CLI, and %s is the name of a cleaning action
+    not_valid_cleaner_msg = _("not a valid cleaner: %s")
+
+    for arg in positive_args:
+        parts = arg.split('.')
+        if 2 != len(parts):
+            logger.warning(not_valid_cleaner_msg, arg)
+            continue
+        (cleaner_id, option_id) = parts
+        # enable all options (for example, firefox.*)
+        if '*' == option_id:
+            if cleaner_id not in backends:
+                logger.warning(not_valid_cleaner_msg, arg)
+                continue
+            if cleaner_id in operations:
+                del operations[cleaner_id]
+            operations[cleaner_id] = [
+                option_id2
+                for (option_id2, _o_name) in backends[cleaner_id].get_options()
+            ]
+            continue
+        # backwards compatibility
+        option_id = fix_deprecated(cleaner_id, option_id)
+        # add the specified option
+        if cleaner_id not in operations:
+            # initialize list of options for this cleaner
+            operations[cleaner_id] = []
+        if option_id not in operations[cleaner_id]:
+            # add option to list
+            operations[cleaner_id].append(option_id)
+
+    for arg in excludes:
+        if '*' in arg or '?' in arg:
+            # TRANSLATORS: Error shown on CLI, and %s is the name of a cleaning action
+            wildcard_msg = _("Wildcard characters are not allowed "
+                             "in --except: %s")
+            logger.error(wildcard_msg, arg)
+            # Exit to avoid over-cleaning.
+            sys.exit(1)
+        parts = arg.split('.')
+        if 2 != len(parts):
+            logger.error(not_valid_cleaner_msg, arg)
+            # Exit to avoid over-cleaning.
+            sys.exit(1)
+        (cleaner_id, option_id) = parts
+        option_id = fix_deprecated(cleaner_id, option_id)
+        if cleaner_id in operations and option_id in operations[cleaner_id]:
+            operations[cleaner_id].remove(option_id)
+            if not operations[cleaner_id]:
+                del operations[cleaner_id]
+
+    for (k, v) in operations.items():
+        operations[k] = sorted(v)
+    return operations
+
+
+def _split_excludes(values):
+    excludes = []
+    for value in values:
+        if value is None:
+            continue
+        excludes.extend(item.strip()
+                        for item in value.split(',') if item.strip())
+    return excludes
+
+
+def parse_cmd_line(argv=None):
+    """Parse the command line and return parser, options, args, and excludes."""
+
+    # TRANSLATORS: This is the command line usage.  Don't translate
+    # %prog, but do translate options, cleaner, and option.
+    # Don't translate and add "usage:" - it gets added by Python.
+    # More information about the command line is here
+    # https://www.bleachbit.org/documentation/command-line
+    usage = _("usage: %prog [options] cleaner.option1 [cleaner.option2 ...]")
+    parser = optparse.OptionParser(usage)
+
+    parser.add_option("-l", "--list-cleaners", action="store_true",
+                      # TRANSLATORS: Help for the --list-cleaners command on the CLI,
+                      # and 'list' is a verb
+                      help=_("list cleaners"))
+    parser.add_option("-p", "--preview", action="store_true",
+                      # TRANSLATORS: Help for the --preview command on the CLI,
+                      # and 'preview' is a verb
+                      help=_("preview files to be deleted and other changes"))
+    parser.add_option("-c", "--clean", action="store_true",
+                      # TRANSLATORS: Help for the --clean command on the CLI
+                      help=_("run cleaners to delete files and make other permanent changes"))
+    parser.add_option("-s", "--shred", action="store_true",
+                      # TRANSLATORS: Help for the --shred command on the CLI,
+                      # and 'shred' is a verb
+                      help=_("shred specific files or folders"))
+    parser.add_option("-w", "--wipe-empty-space", "--wipe-free-space",
+                      action="store_true", dest="wipe_empty_space",
+                      # TRANSLATORS: Help for the --wipe-empty-space
+                      # command on the CLI, and 'wipe' is a verb
+                      help=_("wipe empty space in the given paths"))
+    parser.add_option("-o", "--overwrite", action="store_true",
+                      # TRANSLATORS: Help for the --overwrite option on the CLI,
+                      # and 'overwrite' is a verb
+                      help=_("overwrite files to hide contents"))
+    parser.add_option("--gui", action="store_true",
+                      # TRANSLATORS: Help for the --gui option on the CLI,
+                      # and 'launch' is a verb
+                      help=_("launch the graphical interface"))
+    parser.add_option("--preset", action="store_true",
+                      # TRANSLATORS: Help for the --preset option on the CLI,
+                      # and 'use' is a verb, referring to enabling options set earlier.
+                      help=_("use options set in the graphical interface"))
+    parser.add_option("--all-but-warning", action="store_true",
+                      # TRANSLATORS: Help for the --all-but-warning option on the CLI,
+                      # and 'enable' is a verb.
+                      help=_("enable all options that do not have a warning"))
+    parser.add_option("--except", dest="excludes", action="append", default=[],
+                      # TRANSLATORS: Help for the --except option on the CLI,
+                      # and 'exclude' is a verb.
+                      help=_("exclude cleaner options (can be repeated, comma-separated)"))
+
+    parser.add_option('--debug',
+                      # TRANSLATORS: Help for the --debug option on the CLI,
+                      # and 'set' is a verb.
+                      help=_("set log level to verbose"), action="store_true")
+    # TRANSLATORS: Help for --debug-log option on the CLI.
+    parser.add_option('--debug-log', help=_("log debug messages to file"))
+    parser.add_option("-v", "--version", action="store_true",
+                      # TRANSLATORS: Help for --version option on the CLI.
+                      help=_("output version information and exit"))
+    parser.add_option('--pot', action='store_true',
+                      help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-delete-confirmation", action="store_false",
+                      dest="delete_confirmation",
+                      help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-load-cleaners", action="store_false",
+                      dest="load_cleaners",
+                      help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-first-start", action="store_false",
+                      dest="first_start",
+                      help=optparse.SUPPRESS_HELP)
+
+    if IS_WINDOWS:
+        # TRANSLATORS: Help for --no-uac option on the CLI.
+        uac_help = _("do not prompt for administrator privileges")
+        parser.add_option("--no-uac", action="store_true", help=uac_help)
+
+        parser.add_option('--uac-sid-token', help=optparse.SUPPRESS_HELP)
+
+    # added for testing py2exe build
+    # https://github.com/bleachbit/bleachbit/commit/befe244efee9b2d4859c6b6c31f8bedfd4d85aad#diff-b578cd35e15095f69822ebe497bf8691da1b587d6cc5f5ec252ff4f186dbed56
+    parser.add_option('--exit', action='store_true',
+                      help=optparse.SUPPRESS_HELP)
+
+    # some workaround for context menu added here
+    # https://github.com/bleachbit/bleachbit/commit/b09625925149c98a6c79e278c35d5995e7526993
+    def expand_context_menu_option(_option, _opt, _value, parser):
+        setattr(parser.values, 'gui', True)
+        setattr(parser.values, 'exit', True)
+        setattr(parser.values, 'load_cleaners', False)
+        setattr(parser.values, 'first_start', False)
+    parser.add_option("--context-menu", action="callback", callback=expand_context_menu_option,
+                      help=optparse.SUPPRESS_HELP)
+
+    (options, args) = parser.parse_args(args=argv)
+    excludes = _split_excludes(options.excludes)
+    return parser, options, args, excludes
+
+
+def process_cmd_line():
+    """Parse the command line and execute given commands."""
+
+    parser, options, args, excludes = parse_cmd_line()
+
+    for opt in ('delete_confirmation', 'load_cleaners', 'first_start'):
+        if hasattr(options, opt) and getattr(options, opt) is not None:
+            Options.options.set_override(opt, getattr(options, opt))
+
+    cmd_list = (options.list_cleaners,
+                options.clean,
+                options.preview,
+                options.shred,
+                options.wipe_empty_space)
+    cmd_count = sum(x is True for x in cmd_list)
+    if cmd_count > 1:
+        logger.error(
+            # TRANSLATORS: Error message shown on CLI.
+            _('Specify only one of these commands: --list-cleaners, --wipe-empty-space, '
+              '--preview, --clean, --shred'))
+        sys.exit(1)
+
+    did_something = False
+    if options.debug:
+        # Debug is set in __init__ so it takes effect earlier.
+        # Also, set the override.
+        Options.options.set_override('debug', True)
+    elif options.preset:
+        # but if --preset is given, check if GUI option sets debug
+        if Options.options.get('debug'):
+            set_root_log_level(Options.options.get('debug'))
+            logger.debug("Debugging is enabled in GUI settings.")
+    if options.version:
+        version_message = f"""
+{APP_NAME} version {APP_VERSION}
+Copyright (C) 2008-2026 Andrew Ziem.  All rights reserved.
+License GPLv3+: GNU GPL version 3 or later <https://www.gnu.org/licenses/gpl-3.0.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"""
+        print(version_message)
+        sys.exit(0)
+    if options.list_cleaners:
+        list_cleaners()
+        sys.exit(0)
+    if options.pot:
+        from bleachbit.CleanerML import create_pot
+        create_pot()
+        sys.exit(0)
+    if options.wipe_empty_space:
+        if len(args) < 1:
+            # TRANSLATORS: Error message on the CLI.
+            logger.error(_("No directories given for --wipe-empty-space"))
+            sys.exit(1)
+        # TRANSLATORS: Log message on the CLI.
+        logger.info(_("Wiping empty space can take a long time."))
+        had_error = False
+        for wipe_path in args:
+            # TRANSLATORS: Shows activity in the CLI, and %s is the path to the directory.
+            logger.info(_("Wipe empty space in %s"), wipe_path)
+            import bleachbit.Wipe
+            try:
+                for _ret in bleachbit.Wipe.wipe_path(wipe_path):
+                    pass
+            except OSError as e:
+                # Do not let one bad path abort the remaining ones.
+                logger.error('%s: %s', wipe_path, e)
+                had_error = True
+        sys.exit(1 if had_error else 0)
+    operations = {}
+    if options.preview or options.clean:
+        operations = args_to_operations(
+            args, options.preset, options.all_but_warning, excludes)
+        if not operations:
+            # TRANSLATORS: Error message on the CLI.
+            logger.error(_("No operations selected. Specify cleaner options."))
+            sys.exit(1)
+    if options.overwrite:
+        if not options.clean or options.shred:
+            logger.warning(
+                # TRANSLATORS: '--overwrite' and '--clean' are command line options
+                _("--overwrite is intended only for use with --clean"))
+        Options.options.set_override('shred', True)
+    if options.clean or options.preview:
+        preview_or_clean(operations, options.clean)
+        sys.exit(0)
+    if options.gui:
+        from bleachbit.Bootstrap import check_wayland_and_root
+        if check_wayland_and_root():
+            sys.exit(1)
+        import bleachbit.GuiApplication
+        enable_uac = IS_WINDOWS and not options.no_uac
+        app = bleachbit.GuiApplication.Bleachbit(
+            uac=enable_uac, shred_paths=args, auto_exit=options.exit)
+        sys.exit(app.run())
+    if options.shred:
+        # delete arbitrary files without GUI
+        Options.options.set_override('first_start', False)
+        # create a temporary cleaner object
+        backends['_gui'] = create_simple_cleaner(args)
+        operations = {'_gui': ['files']}
+        preview_or_clean(operations, True)
+        sys.exit(0)
+    if not did_something:
+        parser.print_help()
+
+
+if __name__ == '__main__':
+    bootstrap()
+    process_cmd_line()
